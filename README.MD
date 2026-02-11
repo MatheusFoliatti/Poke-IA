@@ -483,7 +483,7 @@ pokedex-ai/
 
 ## 👨‍💻 Autor
 
-Desenvolvido com ❤️ e ⚡ por você!
+Desenvolvido com ❤️ e ⚡ por Matheus Foliatti!
 
 ---
 
