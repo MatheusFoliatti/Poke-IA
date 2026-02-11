@@ -397,9 +397,7 @@ pokedex-ai/
 
 ### Tela de Login
 
-```
 ![Tela de Login do Projeto](assets/Login.png)
-```
 
 ### Animação da Pokédex Abrindo
 
