@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-poke-red hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-poke-blue hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-poke-blue focus:border-transparent transition;
+  }
+
+  .message-bubble-user {
+    @apply bg-poke-blue text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%] ml-auto shadow-md;
+  }
+
+  .message-bubble-assistant {
+    @apply bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%] shadow-md border border-gray-200;
+  }
+
+  .pokemon-card {
+    @apply bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden;
+  }
+
+  .type-badge {
+    @apply px-3 py-1 rounded-full text-white text-sm font-semibold uppercase tracking-wide;
+  }
+}
+
+/* Pokémon Type Colors */
+.type-normal {
+  @apply bg-gray-400;
+}
+.type-fire {
+  @apply bg-red-500;
+}
+.type-water {
+  @apply bg-blue-500;
+}
+.type-electric {
+  @apply bg-yellow-400;
+}
+.type-grass {
+  @apply bg-green-500;
+}
+.type-ice {
+  @apply bg-cyan-400;
+}
+.type-fighting {
+  @apply bg-red-700;
+}
+.type-poison {
+  @apply bg-purple-500;
+}
+.type-ground {
+  @apply bg-yellow-600;
+}
+.type-flying {
+  @apply bg-indigo-400;
+}
+.type-psychic {
+  @apply bg-pink-500;
+}
+.type-bug {
+  @apply bg-lime-500;
+}
+.type-rock {
+  @apply bg-yellow-700;
+}
+.type-ghost {
+  @apply bg-purple-700;
+}
+.type-dragon {
+  @apply bg-indigo-700;
+}
+.type-dark {
+  @apply bg-gray-800;
+}
+.type-steel {
+  @apply bg-gray-500;
+}
+.type-fairy {
+  @apply bg-pink-300;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Animations */
+@keyframes pokeball-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pokeball-spin {
+  animation: pokeball-spin 1s linear infinite;
+}
+
+/* Loading Animation */
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: loading-bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loading-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

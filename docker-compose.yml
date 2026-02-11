@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: pokedex-db
+    environment:
+      POSTGRES_DB: pokedex_db
+      POSTGRES_USER: pokedex_user
+      POSTGRES_PASSWORD: pokedex_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - pokedex-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pokedex_user -d pokedex_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pokedex-backend
+    environment:
+      DATABASE_URL: postgresql://pokedex_user:pokedex_pass@postgres:5432/pokedex_db
+      SECRET_KEY: ${SECRET_KEY:-your-super-secret-key-change-in-production}
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3.2
+      CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000","http://localhost"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pokedex-network
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pokedex-frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pokedex-network
+
+volumes:
+  postgres_data:
+
+networks:
+  pokedex-network:
+    driver: bridge
