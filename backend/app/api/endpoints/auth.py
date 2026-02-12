@@ -56,24 +56,21 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    """
-    Autentica usuário e retorna token JWT.
+    """Autentica usuário e retorna token JWT."""
     
-    Args:
-        credentials: Credenciais de login
-        db: Sessão do banco de dados
+    print(f"🔐 [LOGIN] Tentativa de login: {credentials.username}")
+    print(f"🔐 [LOGIN] Dados recebidos: {credentials}")
     
-    Returns:
-        Token de acesso JWT
-    
-    Raises:
-        HTTPException: Se credenciais inválidas
-    """
     # Busca usuário
     user = db.query(User).filter(User.username == credentials.username).first()
+    print(f"🔍 [LOGIN] Usuário encontrado: {user.username if user else 'None'}")
     
     # Verifica se usuário existe e senha está correta
     if not user or not verify_password(credentials.password, user.hashed_password):
+        print(f"❌ [LOGIN] Falha na autenticação")
+        print(f"   - Usuário existe: {user is not None}")
+        if user:
+            print(f"   - Senha correta: {verify_password(credentials.password, user.hashed_password)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Username ou senha incorretos",
@@ -82,10 +79,13 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     
     # Verifica se usuário está ativo
     if not user.is_active:
+        print(f"❌ [LOGIN] Usuário inativo")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuário inativo"
         )
+    
+    print(f"✅ [LOGIN] Login bem-sucedido para: {user.username}")
     
     # Cria token de acesso
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

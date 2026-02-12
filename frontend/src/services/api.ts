@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,10 +26,20 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expirado ou inválido
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // ✅ Só redireciona se NÃO for uma tentativa de login
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      const isRegisterRequest = error.config?.url?.includes('/auth/register');
+      
+      if (!isLoginRequest && !isRegisterRequest) {
+        console.warn('⚠️ Token inválido ou expirado - fazendo logout');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        
+        // Usa navigate em vez de window.location para não recarregar
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }

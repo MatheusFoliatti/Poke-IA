@@ -6,22 +6,26 @@ import PokedexClosed from '../UI/PokedexClosed';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
+  
+  // 🔥 Pegue TUDO do store que você precisa
+  const { login, error: storeError, isLoading } = useAuthStore((state) => ({
+    login: state.login,
+    error: state.error,
+    isLoading: state.isLoading
+  }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
 
     try {
       await login(username, password);
-      setTimeout(() => navigate('/pokedex'), 1000);
+      
+      // ✅ Só navega se o login foi bem-sucedido
+      navigate('/pokedex');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erro ao fazer login');
-      setLoading(false);
+      // O erro já está sendo tratado no store
+      console.error('Erro no login:', err);
     }
   };
 
@@ -31,7 +35,7 @@ export default function Login() {
         <h1 className="screen-title">POKÉDEX AI</h1>
         <p className="screen-subtitle">SYSTEM v2.0</p>
 
-        {error && <div className="error-message">{error}</div>}
+        {storeError && <div className="error-message">{storeError}</div>}
 
         <form onSubmit={handleSubmit} className="form-container">
           <div className="form-group">
@@ -42,7 +46,7 @@ export default function Login() {
               onChange={(e) => setUsername(e.target.value)}
               className="form-input"
               required
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
 
@@ -54,12 +58,12 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               className="form-input"
               required
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
 
-          <button type="submit" disabled={loading} className="form-button">
-            {loading ? '> ACCESSING...' : '> ACCESS SYSTEM'}
+          <button type="submit" disabled={isLoading} className="form-button">
+            {isLoading ? '> ACCESSING...' : '> ACCESS SYSTEM'}
           </button>
         </form>
 

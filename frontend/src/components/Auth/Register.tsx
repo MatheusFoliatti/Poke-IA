@@ -17,10 +17,20 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await authService.register(username, email, password);
+      await authService.register({ username, email, password });
       navigate('/login');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erro ao criar conta');
+      // Trata array de erros de validação do FastAPI
+      const detail = err.response?.data?.detail;
+      
+      if (Array.isArray(detail)) {
+        // Extrai as mensagens de erro do array
+        setError(detail.map((e: any) => e.msg).join(', '));
+      } else if (typeof detail === 'string') {
+        setError(detail);
+      } else {
+        setError('Erro ao criar conta. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
