@@ -397,9 +397,7 @@ pokedex-ai/
 
 ### Tela de Login
 
-```
 ![Tela de Login do Projeto](assets/Login.png)
-```
 
 ### Animação da Pokédex Abrindo
 
@@ -485,7 +483,7 @@ pokedex-ai/
 
 ## 👨‍💻 Autor
 
-Desenvolvido com ❤️ e ⚡ por você!
+Desenvolvido com ❤️ e ⚡ por Matheus Foliatti!
 
 ---
 
