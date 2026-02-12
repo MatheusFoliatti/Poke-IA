@@ -45,13 +45,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Envia para API
       const response = await api.post<ChatResponse>('/chat/message', { content });
 
-      // Adiciona resposta do assistente
-      const assistantMessage: Message = {
+      // Adiciona resposta do assistente com dados do Pokémon
+      const assistantMessage: any = {
         id: Date.now() + 1,
         user_id: 0,
         role: 'assistant',
         content: response.data.message,
         created_at: new Date().toISOString(),
+        pokemon_data: response.data.pokemon_data, // Inclui dados do Pokémon
       };
 
       set((state) => ({

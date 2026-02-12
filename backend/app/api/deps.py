@@ -48,11 +48,20 @@ async def get_current_user(
         print("❌ [DEBUG] Falha ao decodificar token")
         raise credentials_exception
     
-    user_id: int = payload.get("sub")
-    print(f"👤 [DEBUG] User ID do payload: {user_id}")
+    # ✅ CORRIGIDO: Obtém sub como string e converte para int
+    user_id_str: str = payload.get("sub")
+    print(f"👤 [DEBUG] User ID (string) do payload: {user_id_str}")
     
-    if user_id is None:
+    if user_id_str is None:
         print("❌ [DEBUG] sub não encontrado no payload")
+        raise credentials_exception
+    
+    # Converte string para int
+    try:
+        user_id: int = int(user_id_str)
+        print(f"👤 [DEBUG] User ID (int) convertido: {user_id}")
+    except (ValueError, TypeError):
+        print("❌ [DEBUG] sub não é um número válido")
         raise credentials_exception
     
     # Busca o usuário no banco
