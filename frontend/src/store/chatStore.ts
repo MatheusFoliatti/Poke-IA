@@ -1,108 +1,97 @@
 import { create } from 'zustand';
-import { Message, ChatResponse } from '@/types';
-import api from '@/services/api';
+import api from '../services/api';
 
-interface ChatState {
-  messages: Message[];
-  isLoading: boolean;
-  error: string | null;
-  suggestions: string[];
-  
-  sendMessage: (content: string) => Promise<void>;
-  loadHistory: () => Promise<void>;
-  clearHistory: () => Promise<void>;
-  setError: (error: string | null) => void;
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  pokemon_data?: any;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
+interface ChatStore {
+  messages: Message[];
+  loading: boolean;
+  sendMessage: (message: string) => Promise<void>;
+  clearHistory: () => void;
+  loadHistory: () => Promise<void>;
+}
+
+export const useChatStore = create<ChatStore>((set) => ({
   messages: [],
-  isLoading: false,
-  error: null,
-  suggestions: [
-    "Me fale sobre Pikachu",
-    "Sugira um time balanceado",
-    "Quais são os tipos de Pokémon?",
-    "Monte um time mono-type de Fogo"
-  ],
+  loading: false,
 
-  sendMessage: async (content: string) => {
+  sendMessage: async (message: string) => {
     try {
-      set({ isLoading: true, error: null });
+      set({ loading: true });
 
-      // Adiciona mensagem do usuário localmente
+      // Adicionar mensagem do usuário
       const userMessage: Message = {
-        id: Date.now(),
-        user_id: 0,
         role: 'user',
-        content,
-        created_at: new Date().toISOString(),
+        content: message,
+        timestamp: new Date().toISOString(),
       };
 
       set((state) => ({
         messages: [...state.messages, userMessage],
       }));
 
-      // Envia para API
-      const response = await api.post<ChatResponse>('/chat/message', { content });
+      // DEBUG: Ver o que está sendo enviado
+      console.log('🔍 Enviando mensagem:', { message });
+      console.log('🔑 Token:', localStorage.getItem('token'));
 
-      // Adiciona resposta do assistente com dados do Pokémon
-      const assistantMessage: any = {
-        id: Date.now() + 1,
-        user_id: 0,
+      // Enviar para API
+      const response = await api.post('/api/chat/message', { message });
+
+      console.log('✅ Resposta recebida:', response.data);
+
+      // Adicionar resposta do bot
+      const botMessage: Message = {
         role: 'assistant',
-        content: response.data.message,
-        created_at: new Date().toISOString(),
-        pokemon_data: response.data.pokemon_data, // Inclui dados do Pokémon
+        content: response.data.bot_response,
+        timestamp: response.data.timestamp,
+        pokemon_data: response.data.pokemon_data,
       };
 
       set((state) => ({
-        messages: [...state.messages, assistantMessage],
-        suggestions: response.data.suggestions || state.suggestions,
-        isLoading: false,
+        messages: [...state.messages, botMessage],
+        loading: false,
       }));
-
     } catch (error: any) {
-      console.error('Error sending message:', error);
-      set({
-        error: error.response?.data?.detail || 'Erro ao enviar mensagem',
-        isLoading: false,
-      });
+      console.error('❌ Erro ao enviar mensagem:', error);
+      console.error('❌ Detalhes do erro:', error.response?.data);
+      
+      // Adicionar mensagem de erro
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',
+        timestamp: new Date().toISOString(),
+      };
+
+      set((state) => ({
+        messages: [...state.messages, errorMessage],
+        loading: false,
+      }));
     }
+  },
+
+  clearHistory: () => {
+    set({ messages: [] });
   },
 
   loadHistory: async () => {
     try {
-      set({ isLoading: true, error: null });
-      const response = await api.get('/chat/history');
-      set({
-        messages: response.data.messages,
-        isLoading: false,
-      });
-    } catch (error: any) {
-      console.error('Error loading history:', error);
-      set({
-        error: error.response?.data?.detail || 'Erro ao carregar histórico',
-        isLoading: false,
-      });
+      const response = await api.get('/api/chat/history');
+      
+      const formattedMessages: Message[] = response.data.map((msg: any) => ({
+        role: msg.is_bot ? 'assistant' : 'user',
+        content: msg.content,
+        timestamp: msg.timestamp,
+        pokemon_data: msg.pokemon_data,
+      }));
+
+      set({ messages: formattedMessages });
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
     }
   },
-
-  clearHistory: async () => {
-    try {
-      set({ isLoading: true, error: null });
-      await api.delete('/chat/history');
-      set({
-        messages: [],
-        isLoading: false,
-      });
-    } catch (error: any) {
-      console.error('Error clearing history:', error);
-      set({
-        error: error.response?.data?.detail || 'Erro ao limpar histórico',
-        isLoading: false,
-      });
-    }
-  },
-
-  setError: (error) => set({ error }),
 }));

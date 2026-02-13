@@ -1,110 +1,135 @@
-import ollama
+# backend/app/core/llm.py
 from typing import List, Dict, Optional
+import ollama
 from app.core.config import settings
 
 
-class LlamaChat:
-    """Classe para interagir com o modelo Llama via Ollama"""
+class LlamaService:
+    """Serviço para interagir com o modelo Llama via Ollama."""
     
     def __init__(self):
         self.model = settings.OLLAMA_MODEL
         self.base_url = settings.OLLAMA_BASE_URL
-        self.system_prompt = """Você é um assistente especializado em Pokémon chamado PokédexAI.
-Você ajuda treinadores com:
-- Informações detalhadas sobre Pokémon
-- Sugestões de times competitivos
-- Estratégias de batalha
-- Counters e matchups
-- Informações sobre tipos, habilidades e movimentos
-
-Seja amigável, use emojis quando apropriado e forneça informações precisas e úteis.
-Quando não souber algo, admita e sugira onde o usuário pode encontrar a informação."""
+        self.client = ollama.Client(host=self.base_url)
     
-    async def generate_response(
-        self, 
-        user_message: str, 
-        context: Optional[str] = None
+    def generate_pokemon_response(
+        self,
+        user_message: str,
+        conversation_history: List[Dict] = None,
+        pokemon_data: Optional[str] = None
     ) -> str:
-        """Gera uma resposta usando o modelo Llama"""
+        """
+        Gera resposta sobre Pokémon usando o modelo Llama.
+        
+        Args:
+            user_message: Mensagem do usuário
+            conversation_history: Histórico de conversa
+            pokemon_data: Dados formatados do Pokémon (se houver)
+        
+        Returns:
+            Resposta gerada pelo modelo
+        """
+        # Monta o prompt do sistema
+        system_prompt = self._build_system_prompt(pokemon_data)
+        
+        # Monta as mensagens
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # Adiciona histórico se houver
+        if conversation_history:
+            messages.extend(conversation_history[-5:])  # Últimas 5 mensagens
+        
+        # Adiciona mensagem atual
+        messages.append({"role": "user", "content": user_message})
         
         try:
-            # Construir o prompt completo
-            full_prompt = self.system_prompt
-            
-            if context:
-                full_prompt += f"\n\nContexto:\n{context}"
-            
-            full_prompt += f"\n\nUsuário: {user_message}\nAssistente:"
-            
-            # Chamar o Ollama
-            response = ollama.chat(
+            # Chama o Ollama
+            response = self.client.chat(
                 model=self.model,
-                messages=[
-                    {
-                        'role': 'system',
-                        'content': self.system_prompt
-                    },
-                    {
-                        'role': 'user',
-                        'content': user_message if not context else f"{context}\n\n{user_message}"
-                    }
-                ]
+                messages=messages,
+                options={
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "max_tokens": 500
+                }
             )
             
             return response['message']['content']
-            
+        
         except Exception as e:
             print(f"Erro ao gerar resposta: {e}")
-            return "Desculpe, não consegui processar sua mensagem no momento. Por favor, tente novamente."
+            return "Desculpe, tive um problema ao processar sua mensagem. Tente novamente!"
     
-    async def generate_team_suggestion(
-        self, 
-        preferences: Dict[str, any]
-    ) -> str:
-        """Gera sugestão de time baseado nas preferências do usuário"""
-        
-        prompt = f"""Com base nas seguintes preferências, sugira um time Pokémon competitivo:
-        
-Tipos favoritos: {preferences.get('favorite_types', 'Nenhum especificado')}
-Geração: {preferences.get('generation', 'Qualquer')}
-Estilo de jogo: {preferences.get('playstyle', 'Balanceado')}
+    def _build_system_prompt(self, pokemon_data: Optional[str] = None) -> str:
+        """Constrói o prompt do sistema."""
+        base_prompt = """Você é um assistente especializado em Pokémon, parte de uma Pokédex AI.
+Seu papel é ajudar treinadores com informações sobre Pokémon, sugestões de times, estratégias e curiosidades.
 
-Por favor, sugira 6 Pokémon com:
-- Nome do Pokémon
-- Tipo(s)
-- Papel no time (Atacante, Defensor, Suporte, etc.)
-- Breve justificativa da escolha
+DIRETRIZES:
+- Seja amigável e entusiasta sobre Pokémon
+- Forneça informações precisas e úteis
+- Use linguagem clara e acessível
+- Quando falar de stats, seja específico
+- Sugira estratégias práticas
+- Seja conciso mas informativo (máximo 3-4 parágrafos)
+
 """
         
-        return await self.generate_response(prompt)
-    
-    async def analyze_matchup(
-        self, 
-        pokemon1: str, 
-        pokemon2: str
-    ) -> str:
-        """Analisa o matchup entre dois Pokémon"""
+        if pokemon_data:
+            base_prompt += f"\nINFORMAÇÕES DO POKÉMON ATUAL:\n{pokemon_data}\n"
+            base_prompt += "\nUse essas informações para dar uma resposta mais detalhada e precisa."
         
-        prompt = f"""Analise o matchup entre {pokemon1} e {pokemon2}:
+        return base_prompt
+    
+    def analyze_team(self, team_pokemon: List[str]) -> str:
+        """Analisa um time de Pokémon e dá sugestões."""
+        prompt = f"""Analise este time de Pokémon e forneça:
+1. Pontos fortes do time
+2. Fraquezas principais
+3. Sugestões de melhoria
 
-1. Vantagens de tipo
-2. Estatísticas comparadas
-3. Movimentos efetivos
-4. Estratégia recomendada
-5. Qual tem vantagem e por quê?
-"""
+Time: {', '.join(team_pokemon)}
+
+Seja específico sobre tipos e coberturas."""
         
-        return await self.generate_response(prompt)
-    
-    def check_ollama_connection(self) -> bool:
-        """Verifica se o Ollama está disponível"""
+        messages = [
+            {"role": "system", "content": "Você é um especialista em análise de times Pokémon."},
+            {"role": "user", "content": prompt}
+        ]
+        
         try:
-            ollama.list()
-            return True
+            response = self.client.chat(
+                model=self.model,
+                messages=messages,
+                options={"temperature": 0.7}
+            )
+            return response['message']['content']
         except Exception as e:
-            print(f"Erro ao conectar com Ollama: {e}")
-            return False
+            print(f"Erro na análise de time: {e}")
+            return "Erro ao analisar o time."
+    
+    def suggest_counters(self, pokemon_name: str) -> str:
+        """Sugere counters para um Pokémon específico."""
+        prompt = f"""Sugira os 3 melhores counters para {pokemon_name}.
+Para cada counter, explique brevemente por que é efetivo.
+Considere tipos, stats e movesets comuns."""
+        
+        messages = [
+            {"role": "system", "content": "Você é um especialista em estratégia Pokémon competitiva."},
+            {"role": "user", "content": prompt}
+        ]
+        
+        try:
+            response = self.client.chat(
+                model=self.model,
+                messages=messages,
+                options={"temperature": 0.7}
+            )
+            return response['message']['content']
+        except Exception as e:
+            print(f"Erro ao sugerir counters: {e}")
+            return "Erro ao sugerir counters."
 
 
-# Instância global (IMPORTANTE!)
-llama_chat = LlamaChat()
+# Instância global do serviço
+llama_service = LlamaService()

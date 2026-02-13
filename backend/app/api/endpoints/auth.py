@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.db.database import get_db
 from app.db.models import User
-from app.schemas.user import UserCreate, UserLogin, Token, User as UserSchema
+from app.schemas.user import UserCreate, Token, User as UserSchema
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.core.config import settings
 from app.api.deps import get_current_user
@@ -12,19 +13,7 @@ router = APIRouter()
 
 @router.post("/register", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    """
-    Registra um novo usuário.
-    
-    Args:
-        user_data: Dados do novo usuário
-        db: Sessão do banco de dados
-    
-    Returns:
-        Usuário criado
-    
-    Raises:
-        HTTPException: Se username ou email já existem
-    """
+    """Registra um novo usuário."""
     # Verifica se username já existe
     if db.query(User).filter(User.username == user_data.username).first():
         raise HTTPException(
@@ -55,22 +44,21 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(credentials: UserLogin, db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     """Autentica usuário e retorna token JWT."""
     
-    print(f"🔐 [LOGIN] Tentativa de login: {credentials.username}")
-    print(f"🔐 [LOGIN] Dados recebidos: {credentials}")
+    print(f"🔐 [LOGIN] Tentativa de login: {form_data.username}")
     
     # Busca usuário
-    user = db.query(User).filter(User.username == credentials.username).first()
+    user = db.query(User).filter(User.username == form_data.username).first()
     print(f"🔍 [LOGIN] Usuário encontrado: {user.username if user else 'None'}")
     
     # Verifica se usuário existe e senha está correta
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         print(f"❌ [LOGIN] Falha na autenticação")
-        print(f"   - Usuário existe: {user is not None}")
-        if user:
-            print(f"   - Senha correta: {verify_password(credentials.password, user.hashed_password)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Username ou senha incorretos",
@@ -90,7 +78,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     # Cria token de acesso
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": str(user.id), "username": user.username},  # ✅ CORRIGIDO: Converte ID para string
+        data={"sub": str(user.id), "username": user.username},
         expires_delta=access_token_expires
     )
     
@@ -99,13 +87,5 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserSchema)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """
-    Retorna informações do usuário autenticado.
-    
-    Args:
-        current_user: Usuário autenticado (via dependency)
-    
-    Returns:
-        Dados do usuário
-    """
+    """Retorna informações do usuário autenticado."""
     return current_user

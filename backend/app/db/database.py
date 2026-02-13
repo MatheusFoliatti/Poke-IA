@@ -1,20 +1,28 @@
+# backend/app/db/database.py
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
-# Criar engine do banco de dados
+# Cria engine do banco de dados
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,
-    echo=True  # Mostra SQL no console (remova em produção)
+    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
 )
 
-# Criar SessionLocal
+# Cria sessão local
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Base para os modelos
+Base = declarative_base()
 
+
+# Dependency para obter sessão do banco
 def get_db():
-    """Dependency para obter sessão do banco de dados"""
+    """
+    Dependency que fornece uma sessão do banco de dados.
+    A sessão é fechada automaticamente após o uso.
+    """
     db = SessionLocal()
     try:
         yield db

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
-import Login from './components/Auth/Login.tsx';
+import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import PokedexMain from './components/Pokedex/PokedexMain';
 
@@ -13,9 +13,10 @@ function App() {
   return (
     <BrowserRouter
       future={{
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-  }}>
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

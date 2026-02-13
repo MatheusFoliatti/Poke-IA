@@ -1,16 +1,16 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para adicionar token em todas as requisições
+// Interceptor para adicionar token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,25 +21,13 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para tratar erros de autenticação
+// Interceptor para tratar erros
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // ✅ Só redireciona se NÃO for uma tentativa de login
-      const isLoginRequest = error.config?.url?.includes('/auth/login');
-      const isRegisterRequest = error.config?.url?.includes('/auth/register');
-      
-      if (!isLoginRequest && !isRegisterRequest) {
-        console.warn('⚠️ Token inválido ou expirado - fazendo logout');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user');
-        
-        // Usa navigate em vez de window.location para não recarregar
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-      }
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

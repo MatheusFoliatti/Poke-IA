@@ -1,63 +1,45 @@
-import api from './api'
-import {
-  LoginCredentials,
-  RegisterData,
-  AuthResponse,
-  User
-} from '@/types'
-
-const TOKEN_KEY = 'access_token'
+import api from './api';
 
 export const authService = {
-async login(credentials: LoginCredentials): Promise<AuthResponse> {
-  console.log('🔐 [AUTH] Fazendo login...', credentials.username);
-  
-  const response = await api.post<AuthResponse>(
-    '/auth/login',
-    credentials
-  )
+  async login(username: string, password: string) {
+    // FastAPI OAuth2 espera x-www-form-urlencoded
+    const params = new URLSearchParams();
+    params.append('username', username);
+    params.append('password', password);
 
-  console.log('✅ [AUTH] Resposta do backend:', response.data);
-  console.log('🎫 [AUTH] Token recebido:', response.data.access_token);
+    const response = await api.post('/api/auth/login', params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
 
-  // 🔐 Salva token automaticamente
-  this.saveToken(response.data.access_token)
-  
-  console.log('💾 [AUTH] Token salvo no localStorage');
-  console.log('🔍 [AUTH] Verificando token salvo:', this.getToken());
-
-  return response.data
-},
-
-  async register(data: RegisterData): Promise<User> {
-    const response = await api.post<User>(
-      '/auth/register',
-      data
-    )
-
-    return response.data
+    const { access_token, token_type } = response.data;
+    localStorage.setItem('token', access_token);
+    localStorage.setItem('token_type', token_type);
+    
+    return { username, access_token, token_type };
   },
 
-  async getCurrentUser(): Promise<User> {
-    const response = await api.get<User>('/auth/me')
-    return response.data
+  async register(username: string, email: string, password: string) {
+    const response = await api.post('/api/auth/register', {
+      username,
+      email,
+      password,
+    });
+
+    return response.data;
   },
 
   logout() {
-    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem('token');
+    localStorage.removeItem('token_type');
   },
 
-  saveToken(token: string) {
-    localStorage.setItem(TOKEN_KEY, token)
+  getToken() {
+    return localStorage.getItem('token');
   },
 
-  getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY)
+  isAuthenticated() {
+    return !!this.getToken();
   },
-
-  isAuthenticated(): boolean {
-    return !!this.getToken()
-  }
-}
-
-export default authService
+};

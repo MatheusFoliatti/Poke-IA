@@ -1,0 +1,144 @@
+/* Message Bubble */
+.message-bubble {
+  display: flex;
+  margin-bottom: 1.5rem;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.message-bubble.user {
+  justify-content: flex-end;
+}
+
+.message-bubble.assistant {
+  justify-content: flex-start;
+}
+
+.message-wrapper {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 85%;
+}
+
+.message-wrapper.user {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.message-avatar.user {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.message-avatar.assistant {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.message-text {
+  padding: 0.875rem 1.125rem;
+  border-radius: 1.125rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1.6;
+  font-size: 0.9375rem;
+}
+
+.message-text.user {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-top-right-radius: 0.375rem;
+}
+
+.message-text.assistant {
+  background: #1f2937;
+  color: #f8fafc;
+  border: 1px solid #374151;
+  border-top-left-radius: 0.375rem;
+}
+
+.message-text p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.message-time.user {
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+.message-time.assistant {
+  color: #9ca3af;
+  text-align: left;
+}
+
+.pokemon-context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  background: #374151;
+  border-radius: 9999px;
+  width: fit-content;
+  border: 1px solid #4b5563;
+}
+
+.context-dot {
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.context-text {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+
+.context-pokemon {
+  font-weight: 600;
+  text-transform: capitalize;
+  color: #f8fafc;
+}
