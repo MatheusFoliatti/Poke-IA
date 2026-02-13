@@ -479,7 +479,7 @@ Desenvolvido com ❤️ e ⚡ por Matheus Foliatti!
 
 **⭐ Se você gostou do projeto, deixe uma estrela! ⭐**
 
-[![GitHub stars](https://img.shields.io/github/stars/MatheusFoliatti/Poke-IA?style=social)](https://MatheusFoliatti/Poke-IA)
+[![GitHub stars](https://img.shields.io/github/stars/MatheusFoliatti/Poke-IA?style=social)](https://github.com/MatheusFoliatti/Poke-IA)
 
 **Gotta catch 'em all! 🔴**
 
