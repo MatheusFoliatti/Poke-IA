@@ -1,27 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuthStore } from '../../store/authStore';
+import React, { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/chatStore';
-import { Send, Trash2, LogOut, Sparkles } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 import MessageBubble from '../Chat/MessageBubble';
-import PokedexAnimation from './PokedexAnimation';
+import TabNavigation, { TabType } from '../Tabs/TabNavigation';
+import SearchTab from '../Tabs/SearchTab';
+import ComparisonTab from '../Tabs/ComparisonTab';
+import TeamTab, { TeamFilters } from '../Tabs/TeamTab';
 import './PokedexMain.css';
+import '../Tabs/Tabs.css';
 
-export default function PokedexMain() {
-  const [showAnimation, setShowAnimation] = useState(true);
-  const [message, setMessage] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+function PokedexMain() {
+  const { messages, isLoading, sendMessage, clearHistory, loadHistory } = useChatStore();
   const { user, logout } = useAuthStore();
-  const { messages, loading, sendMessage, clearHistory } = useChatStore();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const suggestions = [
-    'Me fale sobre Pikachu',
-    'Quais são as stats do Charizard?',
-    'Mostre informações sobre Mewtwo',
-    'Compare Blastoise e Venusaur',
-    'Monte um time balanceado',
-  ];
+  const [activeTab, setActiveTab] = useState<TabType>('search');
+  const [pokemonList, setPokemonList] = useState<string[]>([]);
 
+  // Carregar histórico ao montar
+  useEffect(() => {
+    loadHistory();
+    fetchPokemonList();
+  }, []);
+
+  // Auto-scroll ao adicionar mensagens
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -30,27 +32,60 @@ export default function PokedexMain() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim() || loading) return;
-
-    await sendMessage(message);
-    setMessage('');
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    setMessage(suggestion);
-  };
-
-  const handleClearHistory = () => {
-    if (confirm('Tem certeza que deseja limpar todo o histórico?')) {
-      clearHistory();
+  const fetchPokemonList = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/chat/pokemon-list');
+      const data = await response.json();
+      setPokemonList(data.pokemon || []);
+      console.log(`✅ Carregados ${data.count} Pokémon para autocomplete`);
+    } catch (error) {
+      console.error('❌ Erro ao carregar lista de Pokémon:', error);
     }
   };
 
-  if (showAnimation) {
-    return <PokedexAnimation onComplete={() => setShowAnimation(false)} />;
-  }
+  const handleSearch = (pokemon: string) => {
+    sendMessage(`Me fale sobre ${pokemon}`);
+  };
+
+  const handleCompare = (pokemon1: string, pokemon2: string) => {
+    sendMessage(`Compare ${pokemon1} e ${pokemon2}`);
+  };
+
+  const handleGenerateTeam = (filters: TeamFilters) => {
+    let message = 'Monte uma equipe';
+    if (filters.type) {
+      message += ` de ${filters.type}`;
+    }
+    if (filters.strategy) {
+      message += ` ${filters.strategy}`;
+    }
+    sendMessage(message);
+  };
+
+  const handleClearHistory = async () => {
+    if (window.confirm('Tem certeza que deseja limpar todo o histórico?')) {
+      await clearHistory();
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('Tem certeza que deseja sair?')) {
+      logout();
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'search':
+        return <SearchTab pokemonList={pokemonList} onSearch={handleSearch} />;
+      case 'comparison':
+        return <ComparisonTab pokemonList={pokemonList} onCompare={handleCompare} />;
+      case 'team':
+        return <TeamTab onGenerateTeam={handleGenerateTeam} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="pokedex-main-container">
@@ -63,16 +98,16 @@ export default function PokedexMain() {
 
         <div className="user-profile">
           <div className="user-avatar">
-            {user?.username?.charAt(0).toUpperCase()}
+            {user?.username?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="user-info">
-            <div className="user-name">{user?.username}</div>
+            <div className="user-name">{user?.username || 'Usuário'}</div>
             <div className="user-status">● Online</div>
           </div>
         </div>
 
         <div className="sidebar-stats">
-          <div className="stats-title">Estatísticas</div>
+          <div className="stats-title">ESTATÍSTICAS</div>
           <div className="stat-item">
             <span className="stat-label">Mensagens</span>
             <span className="stat-value">{messages.length}</span>
@@ -80,114 +115,81 @@ export default function PokedexMain() {
           <div className="stat-item">
             <span className="stat-label">Pokémon Consultados</span>
             <span className="stat-value">
-              {messages.filter(m => m.pokemon_data).length}
+              {messages.filter(m => m.pokemon_data && !m.pokemon_data.is_comparison && !m.pokemon_data.is_team).length}
             </span>
           </div>
         </div>
 
         <div className="sidebar-suggestions">
-          <div className="suggestions-title">Sugestões</div>
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              onClick={() => handleSuggestionClick(suggestion)}
-              className="suggestion-item"
-            >
-              {suggestion}
-            </button>
-          ))}
+          <div className="suggestions-title">SUGESTÕES</div>
+          <button className="suggestion-item" onClick={() => handleSearch('pikachu')}>
+            Me fale sobre Pikachu
+          </button>
+          <button className="suggestion-item" onClick={() => handleCompare('charizard', 'blastoise')}>
+            Compare Charizard e Blastoise
+          </button>
+          <button className="suggestion-item" onClick={() => handleGenerateTeam({})}>
+            Monte uma equipe balanceada
+          </button>
+          <button className="suggestion-item" onClick={() => handleGenerateTeam({ type: 'dragon' })}>
+            Time de dragões
+          </button>
         </div>
 
         <div className="sidebar-actions">
-          <button onClick={handleClearHistory} className="action-button clear">
-            <Trash2 size={18} />
-            Limpar Histórico
+          <button className="action-button clear" onClick={handleClearHistory}>
+            🗑️ Limpar Histórico
           </button>
-          <button onClick={logout} className="action-button logout">
-            <LogOut size={18} />
-            Sair
+          <button className="action-button logout" onClick={handleLogout}>
+            🚪 Sair
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="pokedex-main">
-        {/* Header */}
-        <header className="chat-header">
-          <div className="header-content">
-            <h2 className="header-title">POKÉDEX AI</h2>
-            <p className="header-subtitle">
-              Seu assistente inteligente especializado em Pokémon
-            </p>
-          </div>
-        </header>
+        {/* Header com Abas */}
+        <div className="chat-header">
+          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
 
-        {/* Messages Area */}
+        {/* Conteúdo da Aba Ativa */}
+        {renderTabContent()}
+
+        {/* Área de Mensagens */}
         <div className="messages-container">
           <div className="messages-wrapper">
             {messages.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">🔴</div>
-                <h3 className="empty-title">Bem-vindo, Treinador!</h3>
+                <h3 className="empty-title">Nenhuma conversa ainda</h3>
                 <p className="empty-subtitle">
-                  Pergunte-me sobre qualquer Pokémon para começar
+                  Use as abas acima para buscar Pokémon, comparar ou montar equipes!
                 </p>
               </div>
             ) : (
-              <>
-                {messages.map((msg, index) => (
-                  <MessageBubble 
-                    key={`${msg.timestamp}-${index}`} 
-                    message={msg} 
-                  />
-                ))}
-                
-                {loading && (
-                  <div className="loading-container">
-                    <div className="loading-avatar">
-                      <Sparkles size={20} />
-                    </div>
-                    <div className="loading-dots">
-                      <div className="loading-dot"></div>
-                      <div className="loading-dot"></div>
-                      <div className="loading-dot"></div>
-                    </div>
-                  </div>
-                )}
-              </>
+              messages.map((msg, index) => (
+                <MessageBubble key={`${msg.timestamp}-${index}`} message={msg} />
+              ))
             )}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
 
-        {/* Input Area */}
-        <div className="input-container">
-          <div className="input-wrapper">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e);
-                }
-              }}
-              placeholder="Pergunte sobre Pokémon..."
-              className="message-input"
-              disabled={loading}
-              rows={1}
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={loading || !message.trim()}
-              className="send-button"
-            >
-              <Send size={20} />
-              Enviar
-            </button>
+            {isLoading && (
+              <div className="loading-container">
+                <div className="loading-avatar">🤖</div>
+                <div className="loading-dots">
+                  <div className="loading-dot"></div>
+                  <div className="loading-dot"></div>
+                  <div className="loading-dot"></div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
         </div>
       </main>
     </div>
   );
 }
+
+export default PokedexMain;

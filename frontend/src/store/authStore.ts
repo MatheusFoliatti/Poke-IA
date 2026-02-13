@@ -1,53 +1,102 @@
 import { create } from 'zustand';
-import { authService } from '../services/auth';
+import { persist } from 'zustand/middleware';
+import axios from 'axios';
 
-interface User {
+export interface User {
+  id: number;
   username: string;
-  email?: string;
+  token: string;
 }
 
-interface AuthStore {
+interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<boolean>;
+  register: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  checkAuth: () => void;
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
-  user: null,
-  isAuthenticated: false,
-
-  login: async (username: string, password: string) => {
-    try {
-      const data = await authService.login(username, password);
-      
-      set({
-        user: { username: data.username || username },
-        isAuthenticated: true,
-      });
-    } catch (error) {
-      console.error('Erro no login:', error);
-      throw error;
-    }
-  },
-
-  logout: () => {
-    authService.logout();
-    set({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       user: null,
       isAuthenticated: false,
-    });
-  },
 
-  checkAuth: () => {
-    const token = authService.getToken();
-    if (token) {
-      // Você pode decodificar o JWT aqui se quiser
-      set({
-        isAuthenticated: true,
-        user: { username: 'Trainer' }, // Placeholder
-      });
+      login: async (username: string, password: string) => {
+        try {
+          const formData = new URLSearchParams();
+          formData.append('username', username);
+          formData.append('password', password);
+
+          const response = await axios.post(
+            'http://localhost:8000/api/auth/login',
+            formData,
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+            }
+          );
+
+          console.log('📥 Resposta do login:', response.data);
+
+          // Verificar estrutura da resposta
+          if (!response.data || !response.data.access_token || !response.data.user) {
+            console.error('❌ Resposta inválida do servidor:', response.data);
+            return false;
+          }
+
+          const userData: User = {
+            id: response.data.user.id,
+            username: response.data.user.username,
+            token: response.data.access_token,
+          };
+
+          set({
+            user: userData,
+            isAuthenticated: true,
+          });
+
+          console.log('✅ Login realizado com sucesso:', userData);
+          return true;
+        } catch (error: any) {
+          console.error('❌ Erro no login:', error);
+          if (error.response) {
+            console.error('📄 Status:', error.response.status);
+            console.error('📄 Data:', error.response.data);
+          }
+          return false;
+        }
+      },
+
+      register: async (username: string, password: string) => {
+        try {
+          await axios.post('http://localhost:8000/api/auth/register', {
+            username,
+            password,
+          });
+
+          console.log('✅ Registro realizado com sucesso');
+          return true;
+        } catch (error: any) {
+          console.error('❌ Erro no registro:', error);
+          if (error.response) {
+            console.error('📄 Data:', error.response.data);
+          }
+          return false;
+        }
+      },
+
+      logout: () => {
+        set({
+          user: null,
+          isAuthenticated: false,
+        });
+        console.log('✅ Logout realizado');
+      },
+    }),
+    {
+      name: 'auth-storage',
     }
-  },
-}));
+  )
+);

@@ -1,48 +1,57 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
-from app.api.endpoints import auth, chat, pokemon
-from app.db.database import engine
-from app.db.models import Base
+from contextlib import asynccontextmanager
+from app.api.endpoints import auth, chat
+from app.services.chat_service import load_pokemon_names_cache
 
-# Criar tabelas no banco de dados
-Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("🚀 [STARTUP] Iniciando aplicação...")
+    print("🔄 [STARTUP] Carregando cache de Pokémon...")
+    await load_pokemon_names_cache()
+    print("✅ [STARTUP] Cache carregado com sucesso!")
+    yield
+    # Shutdown
+    print("👋 [SHUTDOWN] Encerrando aplicação...")
+
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description="API de Pokedex Inteligente com IA"
+    title="Pokédex AI API",
+    description="API para o assistente de Pokémon com IA",
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
-# Configurar CORS
+# CORS - IMPORTANTE: Deve estar ANTES das rotas
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Incluir routers
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])  # ← IMPORTANTE
-app.include_router(pokemon.router, prefix="/api/pokemon", tags=["Pokemon"])
+# Incluir rotas
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
 
 @app.get("/")
 async def root():
-    """Endpoint raiz"""
     return {
-        "message": "🔴 Bem-vindo à Pokedex AI API!",
-        "version": settings.VERSION,
-        "docs": "/docs"
+        "message": "Pokédex AI API v2.0",
+        "status": "online",
+        "features": [
+            "Busca de Pokémon com correção automática (Fuzzy Matching)",
+            "Comparação de Pokémon",
+            "Geração de equipes balanceadas",
+            "Cache de 1025+ nomes de Pokémon",
+        ],
     }
 
 
 @app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": settings.PROJECT_NAME
-    }
+async def health():
+    return {"status": "healthy"}

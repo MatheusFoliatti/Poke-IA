@@ -226,7 +226,6 @@
 .chat-header {
   background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
   border-bottom: 2px solid #374151;
-  padding: 1.5rem;
   flex-shrink: 0;
 }
 
