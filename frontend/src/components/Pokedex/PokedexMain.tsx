@@ -57,7 +57,7 @@ export default function PokedexMain() {
       {/* Sidebar */}
       <aside className="pokedex-sidebar">
         <div className="sidebar-header">
-          <h1 className="sidebar-title">POKEDEX AI</h1>
+          <h1 className="sidebar-title">POKÉDEX AI</h1>
           <p className="sidebar-subtitle">SYSTEM v2.0</p>
         </div>
 
@@ -115,7 +115,7 @@ export default function PokedexMain() {
         {/* Header */}
         <header className="chat-header">
           <div className="header-content">
-            <h2 className="header-title">POKEDEX AI</h2>
+            <h2 className="header-title">POKÉDEX AI</h2>
             <p className="header-subtitle">
               Seu assistente inteligente especializado em Pokémon
             </p>
@@ -136,7 +136,10 @@ export default function PokedexMain() {
             ) : (
               <>
                 {messages.map((msg, index) => (
-                  <MessageBubble key={index} message={msg} />
+                  <MessageBubble 
+                    key={`${msg.timestamp}-${index}`} 
+                    message={msg} 
+                  />
                 ))}
                 
                 {loading && (

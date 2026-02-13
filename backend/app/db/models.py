@@ -1,4 +1,5 @@
 # backend/app/db/models.py
+
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -17,24 +18,35 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relacionamentos
-    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
-    favorite_pokemon = relationship("FavoritePokemon", back_populates="user", cascade="all, delete-orphan")
-    search_history = relationship("SearchHistory", back_populates="user", cascade="all, delete-orphan")
+    chat_messages = relationship(  # ← ALTERADO
+        "ChatMessage",  # ← ALTERADO
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    favorite_pokemon = relationship(
+        "FavoritePokemon",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    search_history = relationship(
+        "SearchHistory",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
 
 
-class Conversation(Base):
-    """Modelo de conversa/mensagem do chat."""
+class ChatMessage(Base):  # ← ALTERADO de Conversation para ChatMessage
+    """Modelo de mensagem do chat."""
     __tablename__ = "chat_messages"
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    role = Column(String, nullable=False)  # 'user' ou 'assistant'
-    content = Column(Text, nullable=False)
-    pokemon_context = Column(String, nullable=True)  # Nome do Pokémon mencionado
+    content = Column(Text, nullable=False)  # ← Mantido
+    is_bot = Column(Boolean, default=False)  # ← ADICIONADO
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relacionamento
-    user = relationship("User", back_populates="conversations")
+    user = relationship("User", back_populates="chat_messages")  # ← ALTERADO
 
 
 class FavoritePokemon(Base):

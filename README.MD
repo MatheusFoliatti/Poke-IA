@@ -399,31 +399,9 @@ pokedex-ai/
 
 ![Tela de Login do Projeto](assets/Login.png)
 
-### Animação da Pokédex Abrindo
-
-```
-🔴 ─────────► 🔴
-    ⬇️
-   📖 (Abrindo)
-    ⬇️
-  💬 Chat Interface
-```
-
 ### Interface do Chat
 
-```
-┌────────────────────────────────────────┐
-│  👤 Você: Quem é o Pikachu?           │
-│                                        │
-│  🤖 Pokédex AI:                       │
-│  Pikachu é um Pokémon do tipo        │
-│  Elétrico, número 025 na Pokédex.    │
-│  [Sprite do Pikachu]                  │
-│  Stats: HP:35 | ATK:55 | DEF:40...   │
-│                                        │
-│  [ Digite sua pergunta... ]     [📤]  │
-└────────────────────────────────────────┘
-```
+![Interface do Chat](assets/Visual.png)
 
 ---
 

@@ -18,16 +18,86 @@ class PokeAPIService:
             identifier: Nome ou ID do Pokémon
         
         Returns:
-            Dicionário com dados do Pokémon ou None se não encontrado
+            Dicionário com dados FORMATADOS do Pokémon ou None se não encontrado
         """
         try:
+            print(f"🔍 [POKEAPI] Buscando Pokémon: {identifier}")
+            
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.get(f"{self.base_url}/pokemon/{identifier}")
+                response = await client.get(f"{self.base_url}/pokemon/{str(identifier).lower()}")
                 response.raise_for_status()
-                return response.json()
-        except httpx.HTTPError as e:
-            print(f"Erro ao buscar Pokémon {identifier}: {e}")
+                data = response.json()
+                
+                # Formatar dados para o formato esperado pelo chat_service
+                pokemon_data = {
+                    "id": data["id"],
+                    "name": data["name"],
+                    "sprites": {
+                        "front_default": data["sprites"]["front_default"]
+                    },
+                    "types": [t["type"]["name"] for t in data["types"]],
+                    "stats": {
+                        "hp": data["stats"][0]["base_stat"],
+                        "attack": data["stats"][1]["base_stat"],
+                        "defense": data["stats"][2]["base_stat"],
+                        "special-attack": data["stats"][3]["base_stat"],
+                        "special-defense": data["stats"][4]["base_stat"],
+                        "speed": data["stats"][5]["base_stat"]
+                    }
+                }
+                
+                print(f"✅ [POKEAPI] Pokémon encontrado: {pokemon_data['name']}")
+                return pokemon_data
+                
+        except httpx.HTTPStatusError as e:
+            print(f"❌ [POKEAPI] Pokémon não encontrado (HTTP {e.response.status_code}): {identifier}")
             return None
+        except Exception as e:
+            print(f"❌ [POKEAPI] Erro ao buscar Pokémon {identifier}: {type(e).__name__} - {e}")
+            return None
+    
+    async def get_random_pokemon_ids(self, count: int = 6, max_id: int = 1025) -> list:
+        """
+        Retorna IDs aleatórios de Pokémon
+        
+        Args:
+            count: Quantidade de IDs para retornar
+            max_id: ID máximo (1025 = todos até Gen 9)
+        
+        Returns:
+            Lista de IDs aleatórios
+        """
+        import random
+        return random.sample(range(1, max_id + 1), count)
+    
+    async def get_pokemon_by_type(self, type_name: str, limit: int = 20) -> list:
+        """
+        Busca Pokémon de um tipo específico (otimizado)
+        
+        Args:
+            type_name: Nome do tipo (fire, water, ghost, etc)
+            limit: Máximo de resultados
+        
+        Returns:
+            Lista de IDs de Pokémon desse tipo
+        """
+        try:
+            print(f"🔍 [POKEAPI] Buscando Pokémon do tipo: {type_name}")
+            type_data = await self.get_type(type_name)
+            if type_data and 'pokemon' in type_data:
+                # Extrair apenas os IDs
+                pokemon_ids = []
+                for p in type_data['pokemon'][:limit]:
+                    # Extrair ID da URL
+                    url = p['pokemon']['url']
+                    pokemon_id = int(url.rstrip('/').split('/')[-1])
+                    pokemon_ids.append(pokemon_id)
+                print(f"✅ [POKEAPI] Encontrados {len(pokemon_ids)} Pokémon do tipo {type_name}")
+                return pokemon_ids
+            return []
+        except Exception as e:
+            print(f"❌ [POKEAPI] Erro ao buscar tipo {type_name}: {e}")
+            return []
     
     async def get_pokemon_species(self, identifier: str | int) -> Optional[Dict]:
         """
@@ -45,7 +115,7 @@ class PokeAPIService:
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPError as e:
-            print(f"Erro ao buscar espécie do Pokémon {identifier}: {e}")
+            print(f"❌ [POKEAPI] Erro ao buscar espécie do Pokémon {identifier}: {e}")
             return None
     
     async def get_pokemon_list(self, limit: int = 20, offset: int = 0) -> Optional[Dict]:
@@ -68,7 +138,7 @@ class PokeAPIService:
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPError as e:
-            print(f"Erro ao listar Pokémon: {e}")
+            print(f"❌ [POKEAPI] Erro ao listar Pokémon: {e}")
             return None
     
     async def get_type(self, type_name: str) -> Optional[Dict]:
@@ -87,10 +157,10 @@ class PokeAPIService:
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPError as e:
-            print(f"Erro ao buscar tipo {type_name}: {e}")
+            print(f"❌ [POKEAPI] Erro ao buscar tipo {type_name}: {e}")
             return None
     
-    async def get_pokemon_by_type(self, type_name: str) -> Optional[List[Dict]]:
+    async def get_pokemon_by_type_full(self, type_name: str) -> Optional[List[Dict]]:
         """
         Busca todos os Pokémon de um tipo específico.
         
@@ -128,7 +198,7 @@ class PokeAPIService:
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPError as e:
-            print(f"Erro ao buscar cadeia de evolução: {e}")
+            print(f"❌ [POKEAPI] Erro ao buscar cadeia de evolução: {e}")
             return None
     
     async def search_pokemon(self, query: str) -> List[Dict]:

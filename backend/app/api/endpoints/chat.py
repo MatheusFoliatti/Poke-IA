@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+import json
 
 from app.api.deps import get_current_user
 from app.db.database import get_db
@@ -11,7 +12,7 @@ from app.services.chat_service import chat_service
 router = APIRouter()
 
 
-@router.post("/message", response_model=ChatResponse)
+@router.post("/message", response_model=None)
 async def send_message(
     chat_request: ChatRequest,
     current_user: User = Depends(get_current_user),
@@ -31,14 +32,43 @@ async def send_message(
         
         print(f"✅ [CHAT] Resposta gerada com sucesso")
         
-        return ChatResponse(
-            user_message=result["user_message"],
-            bot_response=result["bot_response"],
-            pokemon_data=result.get("pokemon_data"),
-            timestamp=result["timestamp"]
-        )
+        # DEBUG: Ver o que está sendo retornado
+        print(f"🔍 [CHAT] Tipo de result: {type(result)}")
+        print(f"🔍 [CHAT] Chaves em result: {result.keys()}")
+        
+        pokemon_data = result.get("pokemon_data")
+        print(f"🔍 [CHAT] pokemon_data tipo: {type(pokemon_data)}")
+        
+        if pokemon_data:
+            print(f"🔍 [CHAT] pokemon_data conteúdo:")
+            print(f"   - id: {pokemon_data.get('id')}")
+            print(f"   - name: {pokemon_data.get('name')}")
+            print(f"   - types: {pokemon_data.get('types')}")
+            print(f"   - stats: {pokemon_data.get('stats')}")
+            print(f"   - stats tipo: {type(pokemon_data.get('stats'))}")
+            
+            # Tentar serializar para JSON para ver se há problemas
+            try:
+                json_test = json.dumps(pokemon_data)
+                print(f"✅ [CHAT] pokemon_data serializa OK para JSON")
+            except Exception as je:
+                print(f"❌ [CHAT] ERRO ao serializar pokemon_data: {je}")
+        
+        # Retornar diretamente o dicionário sem validação Pydantic
+        response = {
+            "user_message": result["user_message"],
+            "bot_response": result["bot_response"],
+            "pokemon_data": pokemon_data,
+            "timestamp": result["timestamp"]
+        }
+        
+        print(f"📤 [CHAT] Enviando resposta para frontend")
+        return response
+        
     except Exception as e:
         print(f"❌ [CHAT] Erro ao processar mensagem: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 

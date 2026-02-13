@@ -24,7 +24,6 @@ export const useChatStore = create<ChatStore>((set) => ({
     try {
       set({ loading: true });
 
-      // Adicionar mensagem do usuário
       const userMessage: Message = {
         role: 'user',
         content: message,
@@ -35,14 +34,8 @@ export const useChatStore = create<ChatStore>((set) => ({
         messages: [...state.messages, userMessage],
       }));
 
-      // DEBUG: Ver o que está sendo enviado
-      console.log('🔍 Enviando mensagem:', { message });
-      console.log('🔑 Token:', localStorage.getItem('token'));
-
       // Enviar para API
       const response = await api.post('/api/chat/message', { message });
-
-      console.log('✅ Resposta recebida:', response.data);
 
       // Adicionar resposta do bot
       const botMessage: Message = {
@@ -58,9 +51,7 @@ export const useChatStore = create<ChatStore>((set) => ({
       }));
     } catch (error: any) {
       console.error('❌ Erro ao enviar mensagem:', error);
-      console.error('❌ Detalhes do erro:', error.response?.data);
       
-      // Adicionar mensagem de erro
       const errorMessage: Message = {
         role: 'assistant',
         content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',

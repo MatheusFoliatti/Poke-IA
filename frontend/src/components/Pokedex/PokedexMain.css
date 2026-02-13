@@ -1,8 +1,10 @@
 /* PokedexMain.css */
 .pokedex-main-container {
   min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   display: flex;
+  overflow: hidden;
 }
 
 /* Sidebar */
@@ -13,6 +15,9 @@
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -20,6 +25,7 @@
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 2px solid #374151;
+  flex-shrink: 0;
 }
 
 .sidebar-title {
@@ -45,6 +51,7 @@
   background: #374151;
   border-radius: 0.75rem;
   margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 
 .user-avatar {
@@ -58,16 +65,21 @@
   color: white;
   font-weight: bold;
   font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
 .user-info {
   flex: 1;
+  min-width: 0;
 }
 
 .user-name {
   color: white;
   font-weight: 600;
   font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-status {
@@ -82,6 +94,7 @@
   border-radius: 0.75rem;
   padding: 1rem;
   margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 
 .stats-title {
@@ -119,6 +132,10 @@
 .sidebar-suggestions {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 1rem;
+  min-height: 0;
+  padding-right: 0.25rem;
 }
 
 .suggestions-title {
@@ -141,12 +158,14 @@
   color: #d1d5db;
   width: 100%;
   text-align: left;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .suggestion-item:hover {
   background: #4b5563;
   border-color: #60a5fa;
-  transform: translateX(4px);
+  transform: scale(1.02);
 }
 
 /* Sidebar Actions */
@@ -157,6 +176,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .action-button {
@@ -197,9 +217,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Header */
@@ -207,11 +227,10 @@
   background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
   border-bottom: 2px solid #374151;
   padding: 1.5rem;
+  flex-shrink: 0;
 }
 
 .header-content {
-  max-width: 800px;
-  margin: 0 auto;
   text-align: center;
 }
 
@@ -237,8 +256,7 @@
 }
 
 .messages-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .empty-state {
@@ -322,11 +340,10 @@
   background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
   border-top: 2px solid #374151;
   padding: 1.5rem;
+  flex-shrink: 0;
 }
 
 .input-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
   display: flex;
   gap: 1rem;
   align-items: flex-end;
@@ -372,6 +389,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .send-button:hover:not(:disabled) {
@@ -386,20 +404,28 @@
 }
 
 /* Scrollbar */
-.messages-container::-webkit-scrollbar {
+.messages-container::-webkit-scrollbar,
+.sidebar-suggestions::-webkit-scrollbar,
+.pokedex-sidebar::-webkit-scrollbar {
   width: 8px;
 }
 
-.messages-container::-webkit-scrollbar-track {
+.messages-container::-webkit-scrollbar-track,
+.sidebar-suggestions::-webkit-scrollbar-track,
+.pokedex-sidebar::-webkit-scrollbar-track {
   background: #1f2937;
 }
 
-.messages-container::-webkit-scrollbar-thumb {
+.messages-container::-webkit-scrollbar-thumb,
+.sidebar-suggestions::-webkit-scrollbar-thumb,
+.pokedex-sidebar::-webkit-scrollbar-thumb {
   background: #4b5563;
   border-radius: 4px;
 }
 
-.messages-container::-webkit-scrollbar-thumb:hover {
+.messages-container::-webkit-scrollbar-thumb:hover,
+.sidebar-suggestions::-webkit-scrollbar-thumb:hover,
+.pokedex-sidebar::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
 }
 

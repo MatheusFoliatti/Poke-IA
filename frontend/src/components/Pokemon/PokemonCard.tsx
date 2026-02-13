@@ -44,6 +44,15 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
     speed: '⚡'
   };
 
+  const statNames: { [key: string]: string } = {
+    hp: 'HP',
+    attack: 'Attack',
+    defense: 'Defense',
+    'special-attack': 'Sp. Attack',
+    'special-defense': 'Sp. Defense',
+    speed: 'Speed'
+  };
+
   return (
     <div className="pokemon-card">
       <div className="pokemon-header">
@@ -55,15 +64,17 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
               className="pokemon-image"
             />
           </div>
-          <div className="pokemon-number">#{pokemon.id.toString().padStart(3, '0')}</div>
+          <div className="pokemon-number">
+            #{pokemon.id.toString().padStart(3, '0')}
+          </div>
         </div>
 
         <div className="pokemon-info">
           <h3 className="pokemon-name">{pokemon.name}</h3>
           
           <div className="pokemon-types">
-            {pokemon.types.map((type) => (
-              <span key={type} className={`type-badge type-${type}`}>
+            {Array.isArray(pokemon.types) && pokemon.types.map((type, index) => (
+              <span key={`${type}-${index}`} className={`type-badge type-${type}`}>
                 {type}
               </span>
             ))}
@@ -79,12 +90,11 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
       <div className="stats-section">
         <div className="stats-title">Base Stats</div>
         
-        {Object.entries(pokemon.stats).map(([name, value]) => (
-          <div key={name} className="stat-row">
+        {Object.entries(pokemon.stats).map(([name, value], index) => (
+          <div key={`${name}-${index}`} className="stat-row">
             <div className="stat-info">
               <div className="stat-name">
-                <span>{statIcons[name]}</span>
-                <span>{name.replace('-', ' ')}</span>
+                {statIcons[name]} {statNames[name] || name}
               </div>
               <div className="stat-value">{value}</div>
             </div>
@@ -102,10 +112,10 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
         <div className="strength-indicator">
           <span className="strength-label">Overall Strength</span>
           <div className="strength-stars">
-            {[...Array(5)].map((_, i) => (
+            {Array.from({ length: 5 }).map((_, index) => (
               <div
-                key={i}
-                className={`star ${i < getStrengthStars() ? 'filled' : 'empty'}`}
+                key={`star-${index}`}
+                className={`star ${index < getStrengthStars() ? 'filled' : 'empty'}`}
               />
             ))}
           </div>

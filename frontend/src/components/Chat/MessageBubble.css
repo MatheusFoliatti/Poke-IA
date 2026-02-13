@@ -1,144 +1,231 @@
-/* Message Bubble */
 .message-bubble {
   display: flex;
+  gap: 1rem;
   margin-bottom: 1.5rem;
   animation: slideUp 0.3s ease-out;
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
 .message-bubble.user {
-  justify-content: flex-end;
-}
-
-.message-bubble.assistant {
-  justify-content: flex-start;
-}
-
-.message-wrapper {
-  display: flex;
-  gap: 0.75rem;
-  max-width: 85%;
-}
-
-.message-wrapper.user {
   flex-direction: row-reverse;
 }
 
+.message-bubble.bot {
+  flex-direction: row;
+}
+
 .message-avatar {
-  flex-shrink: 0;
   width: 40px;
   height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
-.message-avatar.user {
+.message-bubble.user .message-avatar {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }
 
-.message-avatar.assistant {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+.message-bubble.bot .message-avatar {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.message-content-wrapper {
+  flex: 1;
+  max-width: 70%;
 }
 
 .message-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.message-text {
-  padding: 0.875rem 1.125rem;
-  border-radius: 1.125rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  line-height: 1.6;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  word-wrap: break-word;
+  line-height: 1.5;
   font-size: 0.9375rem;
 }
 
-.message-text.user {
+.message-bubble.user .message-content {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
-  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.25rem;
 }
 
-.message-text.assistant {
+.message-bubble.bot .message-content {
   background: #1f2937;
-  color: #f8fafc;
+  color: #e5e7eb;
   border: 1px solid #374151;
-  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.25rem;
 }
 
-.message-text p {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+.pokemon-card-wrapper {
+  margin-top: 1rem;
 }
 
 .message-time {
+  margin-top: 0.5rem;
   font-size: 0.75rem;
-  padding: 0 0.25rem;
+  opacity: 0.7;
 }
 
-.message-time.user {
-  color: rgba(255, 255, 255, 0.7);
+.message-bubble.user .message-time {
   text-align: right;
+  color: #93c5fd;
 }
 
-.message-time.assistant {
-  color: #9ca3af;
+.message-bubble.bot .message-time {
   text-align: left;
+  color: #9ca3af;
 }
 
-.pokemon-context-badge {
-  display: inline-flex;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Comparação de Pokémon */
+.pokemon-comparison-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pokemon-comparison-item {
+  min-width: 0;
+}
+
+/* Ajustar largura do wrapper quando há comparação */
+.message-bubble.bot .message-content-wrapper:has(.pokemon-comparison-wrapper) {
+  max-width: 90%;
+}
+
+@media (max-width: 768px) {
+  .pokemon-comparison-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+/* Equipe de Pokémon */
+.pokemon-team-wrapper {
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.team-strategy {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border: 2px solid #374151;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.strategy-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.375rem 0.875rem;
-  background: #374151;
-  border-radius: 9999px;
-  width: fit-content;
-  border: 1px solid #4b5563;
 }
 
-.context-dot {
-  width: 8px;
-  height: 8px;
-  background: #ef4444;
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
+.strategy-description {
+  color: #d1d5db;
+  font-size: 0.9375rem;
+  margin-bottom: 1rem;
+  line-height: 1.6;
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+.strategy-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
-.context-text {
-  font-size: 0.75rem;
-  color: #cbd5e1;
-}
-
-.context-pokemon {
+.strategy-section h4 {
+  color: #60a5fa;
+  font-size: 0.875rem;
   font-weight: 600;
-  text-transform: capitalize;
-  color: #f8fafc;
+  margin-bottom: 0.5rem;
+}
+
+.strategy-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.strategy-section li {
+  color: #9ca3af;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.strategy-section li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: #60a5fa;
+}
+
+.pokemon-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.pokemon-team-item {
+  min-width: 0;
+}
+
+/* Ajustar largura do wrapper quando há equipe */
+.message-bubble.bot .message-content-wrapper:has(.pokemon-team-wrapper) {
+  max-width: 95%;
+}
+
+/* Comparação de Pokémon */
+.pokemon-comparison-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pokemon-comparison-item {
+  min-width: 0;
+}
+
+/* Ajustar largura do wrapper quando há comparação */
+.message-bubble.bot .message-content-wrapper:has(.pokemon-comparison-wrapper) {
+  max-width: 90%;
+}
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .pokemon-team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .pokemon-team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pokemon-comparison-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .strategy-details {
+    grid-template-columns: 1fr;
+  }
 }
