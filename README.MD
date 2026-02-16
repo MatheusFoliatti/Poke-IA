@@ -460,7 +460,7 @@ Poke-IA/
 
 ### Interface de Busca Pokemon
 
-![Visual](assets/BuscarPokemon.png)
+![Visual](assets/BuscaPokemon.png)
 
 ---
 
@@ -515,12 +515,6 @@ Contribuições são muito bem-vindas!
 - `style:` Formatação
 - `refactor:` Refatoração
 - `test:` Testes
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
 
 ---
 
