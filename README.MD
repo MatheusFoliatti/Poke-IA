@@ -450,6 +450,19 @@ Poke-IA/
 
 ![Visual](assets/Visual.png)
 
+### Interface de Montagem de Equipe
+
+![Visual](assets/MontarEquipe.png)
+
+### Interface de Comparação de Pokemon
+
+![Visual](assets/ComparaPokemon.png)
+![Visual](assets/ComparaPokemonChat.png)
+
+### Interface de Busca Pokemon
+
+![Visual](assets/BuscarPokemon.png)
+
 ---
 
 ## 🗺 Roadmap

@@ -3,26 +3,29 @@ import { Pokemon } from '../../types/pokemon';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import MessageBubble from '../Chat/MessageBubble';
-import TabNavigation, { TabType } from '../Tabs/TabNavigation';
-import SearchTab from '../Tabs/SearchTab';
-import ComparisonTab from '../Tabs/ComparisonTab';
-import TeamTab, { TeamFilters } from '../Tabs/TeamTab';
 import ConfirmModal from '../Modal/ConfirmModal';
+import SearchModal from '../Modal/SearchModal';
+import ComparisonModal from '../Modal/ComparisonModal';
+import TeamModal from '../Modal/TeamModal';
+import { TeamFilters } from '../Tabs/TeamTab';
 import { api } from '../../services/axiosConfig';
 import './PokedexMain.css';
-import '../Tabs/Tabs.css';
 
 function PokedexMain() {
   const { messages, isLoading, sendMessage, clearHistory, loadHistory } = useChatStore();
   const { user, logout } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [activeTab, setActiveTab] = useState<TabType>('search');
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
   
-  // Estados para modais
+  // Estados para modais de confirmação
   const [showClearModal, setShowClearModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Estados para modais de ação
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
 
   // Carregar histórico ao montar
   useEffect(() => {
@@ -76,19 +79,6 @@ function PokedexMain() {
   const handleLogout = () => {
     setShowLogoutModal(false);
     logout();
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'search':
-        return <SearchTab pokemonList={pokemonList} onSearch={handleSearch} />;
-      case 'comparison':
-        return <ComparisonTab pokemonList={pokemonList} onCompare={handleCompare} />;
-      case 'team':
-        return <TeamTab onGenerateTeam={handleGenerateTeam} />;
-      default:
-        return null;
-    }
   };
 
   return (
@@ -152,13 +142,32 @@ function PokedexMain() {
 
       {/* Main Content */}
       <main className="pokedex-main">
-        {/* Header com Abas */}
+        {/* Header com Botões de Ação */}
         <div className="chat-header">
-          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+          <div className="action-buttons-header">
+            <button 
+              className="action-btn search-btn"
+              onClick={() => setShowSearchModal(true)}
+            >
+              <span className="btn-icon">🔍</span>
+              <span className="btn-text">Buscar Pokémon</span>
+            </button>
+            <button 
+              className="action-btn compare-btn"
+              onClick={() => setShowComparisonModal(true)}
+            >
+              <span className="btn-icon">⚔️</span>
+              <span className="btn-text">Comparar</span>
+            </button>
+            <button 
+              className="action-btn team-btn"
+              onClick={() => setShowTeamModal(true)}
+            >
+              <span className="btn-icon">🎯</span>
+              <span className="btn-text">Montar Equipe</span>
+            </button>
+          </div>
         </div>
-
-        {/* Conteúdo da Aba Ativa */}
-        {renderTabContent()}
 
         {/* Área de Mensagens */}
         <div className="messages-container">
@@ -168,7 +177,7 @@ function PokedexMain() {
                 <div className="empty-icon">🔴</div>
                 <h3 className="empty-title">Nenhuma conversa ainda</h3>
                 <p className="empty-subtitle">
-                  Use as abas acima para buscar Pokémon, comparar ou montar equipes!
+                  Use os botões acima para buscar Pokémon, comparar ou montar equipes!
                 </p>
               </div>
             ) : (
@@ -192,6 +201,27 @@ function PokedexMain() {
           </div>
         </div>
       </main>
+
+      {/* Modais de Ação */}
+      <SearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        pokemonList={pokemonList}
+        onSearch={handleSearch}
+      />
+
+      <ComparisonModal
+        isOpen={showComparisonModal}
+        onClose={() => setShowComparisonModal(false)}
+        pokemonList={pokemonList}
+        onCompare={handleCompare}
+      />
+
+      <TeamModal
+        isOpen={showTeamModal}
+        onClose={() => setShowTeamModal(false)}
+        onGenerateTeam={handleGenerateTeam}
+      />
 
       {/* Modais de Confirmação */}
       <ConfirmModal
