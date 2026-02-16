@@ -12,7 +12,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg)](https://fastapi.tiangolo.com/)
 [![Llama](https://img.shields.io/badge/LLM-Llama_3-FF6B6B.svg)](https://ollama.ai/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 [🚀 Demo](#-screenshots) • [📖 Documentação](#-índice) • [💻 Instalação](#-instalação) • [🤝 Contribuir](#-contribuindo)
 
