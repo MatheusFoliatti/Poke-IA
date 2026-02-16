@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface TeamTabProps {
   onGenerateTeam: (filters: TeamFilters) => void;
@@ -14,7 +14,7 @@ function TeamTab({ onGenerateTeam }: TeamTabProps) {
   const [selectedStrategy, setSelectedStrategy] = useState('');
 
   const types = [
-    { value: '', label: 'Todos os Tipos', icon: '🌈' },
+    { value: '', label: 'Todos', icon: '🌈' },
     { value: 'fire', label: 'Fogo', icon: '🔥' },
     { value: 'water', label: 'Água', icon: '💧' },
     { value: 'grass', label: 'Grama', icon: '🌿' },
@@ -43,16 +43,9 @@ function TeamTab({ onGenerateTeam }: TeamTabProps) {
 
   return (
     <div className="tab-content">
-      <div className="tab-header">
-        <h2 className="tab-title">🎯 Montar Equipe</h2>
-        <p className="tab-description">
-          Crie uma equipe balanceada de 6 Pokémon com base em tipo e estratégia
-        </p>
-      </div>
-
       <div className="team-form">
         <div className="filter-section">
-          <label className="filter-label">🌈 Tipo de Pokémon</label>
+          <label className="filter-label">Tipo</label>
           <div className="filter-grid">
             {types.map(type => (
               <button
@@ -68,7 +61,7 @@ function TeamTab({ onGenerateTeam }: TeamTabProps) {
         </div>
 
         <div className="filter-section">
-          <label className="filter-label">🎯 Estratégia de Batalha</label>
+          <label className="filter-label">Estratégia</label>
           <div className="filter-grid">
             {strategies.map(strategy => (
               <button
@@ -88,7 +81,7 @@ function TeamTab({ onGenerateTeam }: TeamTabProps) {
           onClick={handleGenerate}
         >
           <span>🎯</span>
-          Gerar Equipe Aleatória
+          Gerar Equipe
         </button>
       </div>
     </div>

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Pokemon } from '../../types/pokemon';
 import PokemonAutocomplete from '../Autocomplete/PokemonAutocomplete';
 
 interface SearchTabProps {
-  pokemonList: string[];
+  pokemonList: Pokemon[];
   onSearch: (pokemon: string) => void;
 }
 
@@ -23,19 +24,12 @@ function SearchTab({ pokemonList, onSearch }: SearchTabProps) {
 
   return (
     <div className="tab-content">
-      <div className="tab-header">
-        <h2 className="tab-title">🔍 Buscar Pokémon</h2>
-        <p className="tab-description">
-          Digite o nome de qualquer Pokémon para ver suas informações completas
-        </p>
-      </div>
-
       <div className="search-form">
         <PokemonAutocomplete
           value={searchValue}
           onChange={setSearchValue}
           onSelect={handleSelect}
-          placeholder="Digite o nome do Pokémon (ex: pikachu, charizard...)"
+          placeholder="Digite o nome do Pokémon..."
           pokemonList={pokemonList}
         />
         <button 

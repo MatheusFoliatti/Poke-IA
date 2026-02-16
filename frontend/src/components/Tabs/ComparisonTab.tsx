@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Pokemon } from '../../types/pokemon';
 import PokemonAutocomplete from '../Autocomplete/PokemonAutocomplete';
 
 interface ComparisonTabProps {
-  pokemonList: string[];
+  pokemonList: Pokemon[];
   onCompare: (pokemon1: string, pokemon2: string) => void;
 }
 
@@ -22,13 +23,6 @@ function ComparisonTab({ pokemonList, onCompare }: ComparisonTabProps) {
 
   return (
     <div className="tab-content">
-      <div className="tab-header">
-        <h2 className="tab-title">⚔️ Comparar Pokémon</h2>
-        <p className="tab-description">
-          Escolha dois Pokémon para comparar suas stats e descobrir qual é mais forte
-        </p>
-      </div>
-
       <div className="comparison-form">
         <div className="comparison-inputs">
           <div className="comparison-input-group">
@@ -64,7 +58,7 @@ function ComparisonTab({ pokemonList, onCompare }: ComparisonTabProps) {
           disabled={!canCompare}
         >
           <span>⚔️</span>
-          Comparar Pokémon
+          Comparar
         </button>
       </div>
     </div>

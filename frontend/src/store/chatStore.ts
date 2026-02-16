@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '../services/axiosConfig';  // ← Usar instância configurada
 import { useAuthStore } from './authStore';
 
 export interface Message {
@@ -29,7 +29,6 @@ export const useChatStore = create<ChatState>((set) => ({
       return;
     }
 
-    // Adicionar mensagem do usuário
     const userMessage: Message = {
       role: 'user',
       content: message,
@@ -42,15 +41,7 @@ export const useChatStore = create<ChatState>((set) => ({
     }));
 
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/chat/message',
-        { message },
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
+      const response = await api.post('/api/chat/message', { message });
 
       const botMessage: Message = {
         role: 'assistant',
@@ -88,12 +79,7 @@ export const useChatStore = create<ChatState>((set) => ({
     }
 
     try {
-      await axios.delete('http://localhost:8000/api/chat/history', {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
-
+      await api.delete('/api/chat/history');
       set({ messages: [] });
       console.log('✅ Histórico limpo com sucesso');
     } catch (error) {
@@ -109,11 +95,7 @@ export const useChatStore = create<ChatState>((set) => ({
     }
 
     try {
-      const response = await axios.get('http://localhost:8000/api/chat/history', {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
+      const response = await api.get('/api/chat/history');
 
       const history = response.data.messages || [];
       const formattedMessages: Message[] = history.map((msg: any) => ({

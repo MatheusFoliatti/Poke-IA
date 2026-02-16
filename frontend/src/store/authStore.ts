@@ -14,11 +14,12 @@ interface AuthState {
   login: (username: string, password: string) => Promise<boolean>;
   register: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  updateToken: (token: string) => void;  // ← ADICIONAR
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
 
@@ -40,7 +41,6 @@ export const useAuthStore = create<AuthState>()(
 
           console.log('📥 Resposta do login:', response.data);
 
-          // Verificar estrutura da resposta
           if (!response.data || !response.data.access_token || !response.data.user) {
             console.error('❌ Resposta inválida do servidor:', response.data);
             return false;
@@ -93,6 +93,19 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
         });
         console.log('✅ Logout realizado');
+      },
+
+      updateToken: (token: string) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({
+            user: {
+              ...currentUser,
+              token: token,
+            },
+          });
+          console.log('✅ Token atualizado no store');
+        }
       },
     }),
     {

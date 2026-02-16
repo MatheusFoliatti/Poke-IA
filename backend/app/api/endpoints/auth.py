@@ -82,6 +82,23 @@ async def login(
     }
 
 
+@router.post("/refresh")
+async def refresh_token(current_user: User = Depends(get_current_user)):
+    """Renova o token JWT do usuário"""
+    print(f"🔄 [AUTH] Renovando token para: {current_user.username}")
+
+    # Criar novo token
+    access_token = create_access_token(data={"sub": current_user.username})
+
+    print(f"✅ [AUTH] Token renovado para: {current_user.username}")
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {"id": current_user.id, "username": current_user.username},
+    }
+
+
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
     """Retorna informações do usuário atual"""

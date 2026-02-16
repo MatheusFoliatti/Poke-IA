@@ -24,7 +24,7 @@ async def load_pokemon_names_cache():
 
     async with CACHE_LOCK:
         if CACHE_LOADED:
-            return  # Já foi carregado
+            return
 
         print("🔄 [CACHE] Carregando nomes de todos os Pokémon...")
         POKEMON_NAMES_CACHE = await pokeapi_service.get_all_pokemon_names()
@@ -40,7 +40,6 @@ class ChatService:
         """Processa uma mensagem do usuário e retorna a resposta da IA"""
         print(f"📝 [CHAT_SERVICE] Processando mensagem: {message}")
 
-        # Salvar mensagem do usuário
         user_message = ChatMessage(
             user_id=user_id, content=message, is_bot=False, created_at=datetime.utcnow()
         )
@@ -49,7 +48,6 @@ class ChatService:
 
         print(f"💾 [CHAT_SERVICE] Mensagem do usuário salva no banco")
 
-        # Detectar se menciona um Pokémon específico
         pokemon_data = await self._detect_and_fetch_pokemon(message)
 
         if pokemon_data:
@@ -64,26 +62,26 @@ class ChatService:
             else:
                 print(f"🔍 [CHAT_SERVICE] Pokémon detectado: {pokemon_data['name']}")
 
-        # Buscar histórico de conversas
         history = self._get_chat_history(user_id, db)
-
-        # Gerar contexto para a LLM
         context = self._build_context(history, pokemon_data)
 
         print(f"🤖 [CHAT_SERVICE] Gerando resposta com Ollama...")
 
-        # Gerar resposta da IA
         try:
-            bot_response = await self.llama.generate_response(user_message=message, context=context)
+            bot_response = await self.llama.generate_response(
+                user_message=message, context=context
+            )
             print(f"✅ [CHAT_SERVICE] Resposta gerada: {bot_response[:100]}...")
         except Exception as e:
             print(f"❌ [CHAT_SERVICE] Erro ao gerar resposta com Ollama: {e}")
             print(f"❌ [CHAT_SERVICE] Usando fallback...")
             bot_response = self._generate_fallback_response(pokemon_data)
 
-        # Salvar resposta do bot
         bot_message = ChatMessage(
-            user_id=user_id, content=bot_response, is_bot=True, created_at=datetime.utcnow()
+            user_id=user_id,
+            content=bot_response,
+            is_bot=True,
+            created_at=datetime.utcnow(),
         )
         db.add(bot_message)
         db.commit()
@@ -135,13 +133,16 @@ class ChatService:
                     f"{winner['name'].capitalize()} é mais rápido ({winner['stats']['speed']} vs {loser['stats']['speed']}) ⚡"
                 )
 
-            recommended = p1["name"].capitalize() if total1 > total2 else p2["name"].capitalize()
+            recommended = (
+                p1["name"].capitalize() if total1 > total2 else p2["name"].capitalize()
+            )
             diff = abs(total1 - total2)
             reason = f"tem {diff} pontos a mais no total ({max(total1, total2)} vs {min(total1, total2)})"
 
-            return f"{'. '.join(comparisons)}. ✅ Recomendo {recommended} porque {reason}!"
+            return (
+                f"{'. '.join(comparisons)}. ✅ Recomendo {recommended} porque {reason}!"
+            )
 
-        # Single Pokémon
         return f"Encontrei {pokemon_data['name']}! É do tipo {', '.join(pokemon_data['types'])} com {pokemon_data['stats']['hp']} HP. Veja mais no card! 🔴"
 
     def _get_chat_history(self, user_id: int, db: Session, limit: int = 5):
@@ -159,13 +160,11 @@ class ChatService:
         ]
 
     async def _try_fuzzy_pokemon_name(self, word: str) -> Optional[str]:
-        """Tenta corrigir erros de digitação usando fuzzy matching com TODOS os Pokémon"""
+        """Tenta corrigir erros de digitação usando fuzzy matching"""
 
-        # Garantir que o cache está carregado
         if not CACHE_LOADED:
             await load_pokemon_names_cache()
 
-        # Mapeamento manual de erros MUITO comuns (mais rápido que fuzzy)
         common_typos = {
             "raiquza": "rayquaza",
             "raikaisa": "rayquaza",
@@ -196,31 +195,30 @@ class ChatService:
 
         word_lower = word.lower()
 
-        # 1. Busca exata no mapeamento manual (mais rápido)
         if word_lower in common_typos:
             corrected = common_typos[word_lower]
             print(f"🔧 [TYPO] Correção manual: '{word}' -> '{corrected}'")
             return corrected
 
-        # 2. Fuzzy matching com TODOS os Pokémon (cache completo)
         if POKEMON_NAMES_CACHE:
-            # Tentar com cutoff alto primeiro (mais preciso)
-            matches = get_close_matches(word_lower, POKEMON_NAMES_CACHE, n=1, cutoff=0.75)
+            matches = get_close_matches(
+                word_lower, POKEMON_NAMES_CACHE, n=1, cutoff=0.75
+            )
 
             if matches:
                 corrected = matches[0]
                 print(f"🔧 [TYPO] Fuzzy match (75%): '{word}' -> '{corrected}'")
                 return corrected
 
-            # Se não encontrou, tentar com cutoff mais baixo
-            matches = get_close_matches(word_lower, POKEMON_NAMES_CACHE, n=1, cutoff=0.6)
+            matches = get_close_matches(
+                word_lower, POKEMON_NAMES_CACHE, n=1, cutoff=0.6
+            )
 
             if matches:
                 corrected = matches[0]
                 print(f"🔧 [TYPO] Fuzzy match (60%): '{word}' -> '{corrected}'")
                 return corrected
 
-        # 3. Busca por prefixo (primeiras 4 letras)
         if len(word_lower) >= 4 and POKEMON_NAMES_CACHE:
             for pokemon in POKEMON_NAMES_CACHE:
                 if len(pokemon) >= 4 and word_lower[:4] == pokemon[:4]:
@@ -234,7 +232,6 @@ class ChatService:
         """Detecta menção a Pokémon e busca dados da PokéAPI"""
         message_lower = message.lower()
 
-        # Detectar pedido de equipe PRIMEIRO
         team_keywords = [
             "equipe",
             "time",
@@ -250,12 +247,10 @@ class ChatService:
             if team_filters.get("is_team_request"):
                 return await self._generate_balanced_team(team_filters)
 
-        # Detectar comparação
         comparison_keywords = ["compare", "comparar", "versus", " vs ", " x "]
         if any(keyword in message_lower for keyword in comparison_keywords):
             return await self._detect_multiple_pokemon(message)
 
-        # Busca de Pokémon único
         words_to_remove = [
             "me",
             "fale",
@@ -286,23 +281,22 @@ class ChatService:
 
         words = message_lower.split()
 
-        # Primeira tentativa: cada palavra
         for word in words:
             clean_word = word.strip("?!.,;:")
             if len(clean_word) <= 2 or clean_word in words_to_remove:
                 continue
 
-            # Tentar buscar direto primeiro
             print(f"🔍 [CHAT_SERVICE] Tentando buscar direto: {clean_word}")
             try:
                 pokemon_data = await pokeapi_service.get_pokemon(clean_word)
                 if pokemon_data:
-                    print(f"✅ [CHAT_SERVICE] Pokémon encontrado direto: {pokemon_data['name']}")
+                    print(
+                        f"✅ [CHAT_SERVICE] Pokémon encontrado direto: {pokemon_data['name']}"
+                    )
                     return pokemon_data
             except:
                 pass
 
-            # Se não encontrou, tentar correção com fuzzy matching
             corrected_word = await self._try_fuzzy_pokemon_name(clean_word)
             if corrected_word and corrected_word != clean_word:
                 print(f"🔍 [CHAT_SERVICE] Tentando com correção: {corrected_word}")
@@ -316,15 +310,17 @@ class ChatService:
                 except:
                     pass
 
-        # Segunda tentativa: palavra mais longa
         longest_word = max(
-            (w.strip("?!.,;:") for w in words if w.strip("?!.,;:") not in words_to_remove),
+            (
+                w.strip("?!.,;:")
+                for w in words
+                if w.strip("?!.,;:") not in words_to_remove
+            ),
             key=len,
             default=None,
         )
 
         if longest_word and len(longest_word) >= 3:
-            # Tentar direto
             print(f"🔍 [CHAT_SERVICE] Tentando palavra mais longa: {longest_word}")
             try:
                 pokemon_data = await pokeapi_service.get_pokemon(longest_word)
@@ -333,10 +329,11 @@ class ChatService:
             except:
                 pass
 
-            # Tentar com correção
             corrected = await self._try_fuzzy_pokemon_name(longest_word)
             if corrected and corrected != longest_word:
-                print(f"🔍 [CHAT_SERVICE] Tentando correção da palavra longa: {corrected}")
+                print(
+                    f"🔍 [CHAT_SERVICE] Tentando correção da palavra longa: {corrected}"
+                )
                 try:
                     pokemon_data = await pokeapi_service.get_pokemon(corrected)
                     if pokemon_data:
@@ -382,7 +379,6 @@ class ChatService:
                 if pokemon_data:
                     pokemon_list.append(pokemon_data)
             except:
-                # Tentar com fuzzy matching
                 corrected = await self._try_fuzzy_pokemon_name(name)
                 if corrected:
                     try:
@@ -402,7 +398,11 @@ class ChatService:
         """Detecta pedido de equipe e filtros"""
         message_lower = message.lower()
 
-        filters = {"is_team_request": True, "type_filter": None, "strategy_filter": None}
+        filters = {
+            "is_team_request": True,
+            "type_filter": None,
+            "strategy_filter": None,
+        }
 
         type_mapping = {
             "fogo": "fire",
@@ -432,7 +432,9 @@ class ChatService:
             filters["strategy_filter"] = "speed"
         elif any(k in message_lower for k in ["tank", "defensiv", "resistent"]):
             filters["strategy_filter"] = "tank"
-        elif any(k in message_lower for k in ["ataque", "atacante", "offensive", "ofensiv"]):
+        elif any(
+            k in message_lower for k in ["ataque", "atacante", "offensive", "ofensiv"]
+        ):
             filters["strategy_filter"] = "offensive"
         elif any(k in message_lower for k in ["balanceado", "equilibrado", "balanced"]):
             filters["strategy_filter"] = "balanced"
@@ -440,7 +442,7 @@ class ChatService:
         return filters
 
     async def _generate_balanced_team(self, filters: dict = None) -> Optional[dict]:
-        """Gera equipe balanceada"""
+        """Gera equipe balanceada com Pokémon totalmente evoluídos (máximo 1 Mega)"""
         global LAST_TEAM_IDS
 
         if filters is None:
@@ -452,56 +454,125 @@ class ChatService:
         try:
             team_list = []
             attempts = 0
+            max_attempts = 50
+            mega_count = 0  # Contador de Mega Evolutions
 
+            print(
+                f"🎯 [TEAM] Gerando equipe (tipo: {type_filter}, estratégia: {strategy_filter})"
+            )
+
+            # Buscar apenas Pokémon totalmente evoluídos
             if type_filter:
-                type_pokemon_ids = await pokeapi_service.get_pokemon_by_type(type_filter, limit=100)
-                available_ids = [
-                    pid for pid in type_pokemon_ids if pid not in LAST_TEAM_IDS
-                ] or type_pokemon_ids
-                selected_ids = random.sample(available_ids, min(6, len(available_ids)))
+                print(f"🔍 [TEAM] Buscando Pokémon evoluídos do tipo {type_filter}...")
+                evolved_ids = await pokeapi_service.get_fully_evolved_pokemon(
+                    type_filter, limit=30
+                )
             else:
+                print(f"🔍 [TEAM] Buscando Pokémon evoluídos de tipos variados...")
                 main_types = ["fire", "water", "grass", "electric", "psychic", "dragon"]
-                selected_ids = []
-                for ptype in main_types:
-                    type_ids = await pokeapi_service.get_pokemon_by_type(ptype, limit=50)
-                    available = [pid for pid in type_ids if pid not in LAST_TEAM_IDS] or type_ids
-                    if available:
-                        selected_ids.append(random.choice(available))
+                evolved_ids = []
 
-            for pokemon_id in selected_ids:
-                if attempts >= 50:
+                for ptype in main_types:
+                    type_evolved = await pokeapi_service.get_fully_evolved_pokemon(
+                        ptype, limit=10
+                    )
+                    evolved_ids.extend(type_evolved[:5])
+
+            if not evolved_ids:
+                print(f"⚠️ [TEAM] Nenhum Pokémon evoluído encontrado")
+                return None
+
+            available_ids = [pid for pid in evolved_ids if pid not in LAST_TEAM_IDS]
+
+            if len(available_ids) < 6:
+                available_ids = evolved_ids
+
+            random.shuffle(available_ids)
+
+            # Buscar dados de cada Pokémon
+            for pokemon_id in available_ids[:15]:
+                if len(team_list) >= 6:
                     break
+
+                if attempts >= max_attempts:
+                    break
+
                 try:
                     pokemon_data = await pokeapi_service.get_pokemon(pokemon_id)
+
                     if pokemon_data:
-                        if strategy_filter and not self._matches_strategy(
-                            pokemon_data, strategy_filter
-                        ):
+                        # Verificar se é Mega Evolution
+                        is_mega = pokeapi_service.is_mega_evolution(
+                            pokemon_data["name"]
+                        )
+
+                        # Se já tem 1 Mega, pular outros Megas
+                        if is_mega and mega_count >= 1:
+                            print(
+                                f"⏭️ [TEAM] {pokemon_data['name']} é Mega, mas já tem 1 na equipe"
+                            )
                             attempts += 1
                             continue
+
+                        # Aplicar filtro de estratégia
+                        if strategy_filter:
+                            if not self._matches_strategy(
+                                pokemon_data, strategy_filter
+                            ):
+                                attempts += 1
+                                continue
+
                         team_list.append(pokemon_data)
-                except:
+
+                        if is_mega:
+                            mega_count += 1
+                            print(
+                                f"✅ [TEAM] Adicionado MEGA: {pokemon_data['name']} (1/1)"
+                            )
+                        else:
+                            print(f"✅ [TEAM] Adicionado: {pokemon_data['name']}")
+
+                except Exception as e:
+                    print(f"❌ [TEAM] Erro ao buscar ID {pokemon_id}: {e}")
                     attempts += 1
 
-            while len(team_list) < 6 and attempts < 50:
+            # Completar equipe
+            while len(team_list) < 6 and attempts < max_attempts:
                 try:
-                    random_id = (
-                        random.choice(type_pokemon_ids)
-                        if type_filter and "type_pokemon_ids" in locals()
-                        else random.randint(1, 1025)
-                    )
-                    if random_id not in LAST_TEAM_IDS and random_id not in [
-                        p["id"] for p in team_list
-                    ]:
+                    random_id = random.choice(available_ids)
+
+                    if random_id not in [p["id"] for p in team_list]:
                         pokemon_data = await pokeapi_service.get_pokemon(random_id)
                         if pokemon_data:
+                            is_mega = pokeapi_service.is_mega_evolution(
+                                pokemon_data["name"]
+                            )
+
+                            if is_mega and mega_count >= 1:
+                                attempts += 1
+                                continue
+
                             team_list.append(pokemon_data)
+
+                            if is_mega:
+                                mega_count += 1
+                                print(
+                                    f"✅ [TEAM] Completando com MEGA: {pokemon_data['name']}"
+                                )
+                            else:
+                                print(f"✅ [TEAM] Completando: {pokemon_data['name']}")
                 except:
                     pass
+
                 attempts += 1
 
             if len(team_list) >= 6:
                 LAST_TEAM_IDS = [p["id"] for p in team_list]
+
+                print(
+                    f"✅ [TEAM] Equipe completa: {', '.join([p['name'] for p in team_list])}"
+                )
+
                 return {
                     "is_team": True,
                     "team_list": team_list,
@@ -509,10 +580,15 @@ class ChatService:
                         team_list, type_filter, strategy_filter
                     ),
                 }
-            return None
+            else:
+                print(f"⚠️ [TEAM] Equipe incompleta: {len(team_list)} Pokémon")
+                return None
 
         except Exception as e:
-            print(f"❌ [TEAM] Erro: {e}")
+            print(f"❌ [TEAM] Erro ao gerar equipe: {e}")
+            import traceback
+
+            traceback.print_exc()
             return None
 
     def _matches_strategy(self, pokemon_data: dict, strategy: str) -> bool:
@@ -555,8 +631,29 @@ class ChatService:
             roles.append(f"{pokemon['name'].capitalize()}: {role}")
 
         if type_filter:
-            title = f"Equipe {type_filter.capitalize()} Especializada"
-            description = f"Equipe focada no tipo {type_filter}"
+            type_names = {
+                "fire": "Fogo",
+                "water": "Água",
+                "grass": "Grama",
+                "electric": "Elétrico",
+                "psychic": "Psíquico",
+                "fighting": "Lutador",
+                "dragon": "Dragão",
+                "ghost": "Fantasma",
+                "ice": "Gelo",
+                "rock": "Pedra",
+                "ground": "Terra",
+                "flying": "Voador",
+                "poison": "Venenoso",
+                "bug": "Inseto",
+                "normal": "Normal",
+                "dark": "Sombrio",
+                "steel": "Metálico",
+                "fairy": "Fada",
+            }
+            type_display = type_names.get(type_filter, type_filter.capitalize())
+            title = f"Equipe {type_display} Especializada"
+            description = f"Equipe focada no tipo {type_display}"
         elif strategy_filter == "speed":
             title = "Equipe Speed Blitz"
             description = "Time ultra-rápido"
@@ -568,7 +665,7 @@ class ChatService:
             description = "Time ofensivo"
         else:
             title = "Equipe Balanceada"
-            description = "Equipe versátil"
+            description = "Equipe versátil com Pokémon totalmente evoluídos"
 
         avg_stats = {
             "hp": sum(p["stats"]["hp"] for p in team_list) // len(team_list),
@@ -585,6 +682,7 @@ class ChatService:
         if avg_stats["attack"] >= 85:
             strengths.append("Forte ataque")
         strengths.append(f"HP médio: {avg_stats['hp']}")
+        strengths.append("Apenas Pokémon totalmente evoluídos")
 
         return {
             "title": title,
@@ -606,7 +704,9 @@ class ChatService:
                 context_parts.append(f"Equipe: {strategy.get('title')}")
                 context_parts.append(f"Descrição: {strategy.get('description')}")
                 for i, p in enumerate(team_list, 1):
-                    context_parts.append(f"{i}. {p['name'].upper()} ({', '.join(p['types'])})")
+                    context_parts.append(
+                        f"{i}. {p['name'].upper()} ({', '.join(p['types'])})"
+                    )
             elif pokemon_data.get("is_comparison"):
                 for i, p in enumerate(pokemon_data["pokemon_list"], 1):
                     context_parts.append(
@@ -623,15 +723,6 @@ class ChatService:
                 context_parts.append(f"{msg['role']}: {msg['content'][:50]}")
 
         return "\n".join(context_parts)
-
-    def _analyze_comparison(self, pokemon_list: list) -> str:
-        """Analisa comparação"""
-        if len(pokemon_list) < 2:
-            return ""
-        p1, p2 = pokemon_list[0], pokemon_list[1]
-        total1, total2 = sum(p1["stats"].values()), sum(p2["stats"].values())
-        winner = p1["name"].upper() if total1 > total2 else p2["name"].upper()
-        return f"✅ {winner} é superior (Total: {max(total1, total2)})"
 
     async def get_chat_history_for_user(self, user_id: int, db: Session):
         """Retorna histórico completo"""

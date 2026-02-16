@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Pokemon } from '../../types/pokemon';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import MessageBubble from '../Chat/MessageBubble';
@@ -6,6 +7,8 @@ import TabNavigation, { TabType } from '../Tabs/TabNavigation';
 import SearchTab from '../Tabs/SearchTab';
 import ComparisonTab from '../Tabs/ComparisonTab';
 import TeamTab, { TeamFilters } from '../Tabs/TeamTab';
+import ConfirmModal from '../Modal/ConfirmModal';
+import { api } from '../../services/axiosConfig';
 import './PokedexMain.css';
 import '../Tabs/Tabs.css';
 
@@ -15,7 +18,11 @@ function PokedexMain() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState<TabType>('search');
-  const [pokemonList, setPokemonList] = useState<string[]>([]);
+  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  
+  // Estados para modais
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Carregar histórico ao montar
   useEffect(() => {
@@ -34,10 +41,9 @@ function PokedexMain() {
 
   const fetchPokemonList = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/chat/pokemon-list');
-      const data = await response.json();
-      setPokemonList(data.pokemon || []);
-      console.log(`✅ Carregados ${data.count} Pokémon para autocomplete`);
+      const response = await api.get('/api/chat/pokemon-list');
+      setPokemonList(response.data.pokemon || []);
+      console.log(`✅ Carregados ${response.data.count} Pokémon para autocomplete`);
     } catch (error) {
       console.error('❌ Erro ao carregar lista de Pokémon:', error);
     }
@@ -63,15 +69,13 @@ function PokedexMain() {
   };
 
   const handleClearHistory = async () => {
-    if (window.confirm('Tem certeza que deseja limpar todo o histórico?')) {
-      await clearHistory();
-    }
+    setShowClearModal(false);
+    await clearHistory();
   };
 
   const handleLogout = () => {
-    if (window.confirm('Tem certeza que deseja sair?')) {
-      logout();
-    }
+    setShowLogoutModal(false);
+    logout();
   };
 
   const renderTabContent = () => {
@@ -137,10 +141,10 @@ function PokedexMain() {
         </div>
 
         <div className="sidebar-actions">
-          <button className="action-button clear" onClick={handleClearHistory}>
+          <button className="action-button clear" onClick={() => setShowClearModal(true)}>
             🗑️ Limpar Histórico
           </button>
-          <button className="action-button logout" onClick={handleLogout}>
+          <button className="action-button logout" onClick={() => setShowLogoutModal(true)}>
             🚪 Sair
           </button>
         </div>
@@ -188,6 +192,29 @@ function PokedexMain() {
           </div>
         </div>
       </main>
+
+      {/* Modais de Confirmação */}
+      <ConfirmModal
+        isOpen={showClearModal}
+        title="Limpar Histórico"
+        message="Tem certeza que deseja limpar todo o histórico de conversas? Esta ação não pode ser desfeita."
+        confirmText="Sim, Limpar"
+        cancelText="Cancelar"
+        type="danger"
+        onConfirm={handleClearHistory}
+        onCancel={() => setShowClearModal(false)}
+      />
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        title="Sair da Conta"
+        message="Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o sistema."
+        confirmText="Sim, Sair"
+        cancelText="Cancelar"
+        type="warning"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </div>
   );
 }
