@@ -497,27 +497,6 @@ Poke-IA/
 
 ---
 
-## 🤝 Contribuindo
-
-Contribuições são muito bem-vindas!
-
-1. Fork o projeto
-2. Crie uma branch: `git checkout -b feature/MinhaFeature`
-3. Commit: `git commit -m 'Add: Nova feature'`
-4. Push: `git push origin feature/MinhaFeature`
-5. Abra um Pull Request
-
-### Padrões de Commit
-
-- `feat:` Nova funcionalidade
-- `fix:` Correção de bug
-- `docs:` Documentação
-- `style:` Formatação
-- `refactor:` Refatoração
-- `test:` Testes
-
----
-
 ## 🙏 Agradecimentos
 
 - [PokéAPI](https://pokeapi.co/) - API incrível de Pokémon
