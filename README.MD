@@ -13,7 +13,7 @@
 [![Llama](https://img.shields.io/badge/LLM-Llama_3-FF6B6B.svg)](https://ollama.ai/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)](https://www.postgresql.org/)
 
-[🚀 Demo](#-screenshots) • [📖 Documentação](#-índice) • [💻 Instalação](#-instalação) • [🤝 Contribuir](#-contribuindo)
+[🚀 Demo](#-screenshots) • [📖 Documentação](#-índice) • [💻 Instalação](#-instalação) 
 
 </div>
 
