@@ -1,3 +1,7 @@
+"""
+Modelos do banco de dados
+"""
+
 from sqlalchemy import (
     Column,
     Integer,
@@ -10,14 +14,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from .database import Base
+from app.db.database import Base
 
 
 class User(Base):
     """
     Modelo de Usuário
-
-    Representa um usuário registrado no sistema com suas conversas.
     """
 
     __tablename__ = "users"
@@ -32,23 +34,21 @@ class User(Base):
     conversations = relationship(
         "Conversation", back_populates="user", cascade="all, delete-orphan"
     )
+    messages = relationship("ChatMessage", back_populates="user")
 
 
 class Conversation(Base):
     """
     Modelo de Conversa
-
-    Representa uma conversa individual do usuário.
-    Cada usuário pode ter múltiplas conversas.
     """
 
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    title = Column(String(255), default="Nova Conversa", nullable=False)
+    title = Column(String(255), nullable=False, default="Nova Conversa")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
@@ -60,8 +60,17 @@ class Conversation(Base):
         "ChatMessage", back_populates="conversation", cascade="all, delete-orphan"
     )
 
+    @property
+    def message_count(self):
+        """Retorna o número de mensagens na conversa"""
+        return len(self.messages)
+
 
 class ChatMessage(Base):
+    """
+    Modelo de Mensagem de Chat
+    """
+
     __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -71,8 +80,9 @@ class ChatMessage(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     content = Column(Text, nullable=False)
     is_bot = Column(Boolean, default=False, nullable=False)
-    pokemon_data = Column(JSON, nullable=True)  # ← ADICIONAR
+    pokemon_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    # Relacionamentos
     user = relationship("User", back_populates="messages")
     conversation = relationship("Conversation", back_populates="messages")
