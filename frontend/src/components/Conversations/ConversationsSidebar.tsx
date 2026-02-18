@@ -8,7 +8,7 @@ interface ConversationsSidebarProps {
   activeConversationId: number | null;
   isLoading: boolean;
   onSelectConversation: (id: number) => void;
-  onNewConversation: () => void;
+  onNewConversation: () => Promise<Conversation | null>;
   onRenameConversation: (id: number, newTitle: string) => void;
   onDeleteConversation: (id: number) => void;
 }
@@ -24,30 +24,34 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
 }) => {
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const [highlightEmptyId, setHighlightEmptyId] = useState<number | null>(null);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+  const [showToast, setShowToast] = useState(false);
 
-  const handleNewConversation = () => {
-    // Verificar se já existe conversa vazia sem título personalizado
-    const emptyConversation = conversations.find(
-      (conv) => conv.message_count === 0 && 
-      (conv.title === 'Nova Conversa' || conv.title.startsWith('Conversa'))
-    );
-
-    if (emptyConversation) {
-      // Destacar conversa vazia existente
-      setHighlightEmptyId(emptyConversation.id);
-      onSelectConversation(emptyConversation.id);
+  const handleNewConversation = async () => {
+    const result = await onNewConversation();
+    
+    // Se retornou conversa existente (não criou nova)
+    if (result) {
+      const existingEmpty = conversations.find(
+        conv => conv.id === result.id && conv.message_count === 0
+      );
       
-      // Remover destaque após 2 segundos
-      setTimeout(() => {
-        setHighlightEmptyId(null);
-      }, 2000);
-      
-      return;
+      if (existingEmpty && existingEmpty.id === result.id) {
+        // É uma conversa vazia existente, destacar
+        setHighlightId(result.id);
+        setShowToast(true);
+        
+        // Remover destaque após 2s
+        setTimeout(() => {
+          setHighlightId(null);
+        }, 2000);
+        
+        // Remover toast após 3s
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
+      }
     }
-
-    // Se não houver conversa vazia, criar nova
-    onNewConversation();
   };
 
   const handleRenameClick = (conversation: Conversation) => {
@@ -85,6 +89,13 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
           <span>Nova Conversa</span>
         </button>
       </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="conversation-toast">
+          ℹ️ Você já tem uma conversa vazia. Use esta ou envie mensagens para criar outra!
+        </div>
+      )}
 
       <div className="conversations-list">
         {isLoading ? (
@@ -140,7 +151,7 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
                   key={conversation.id}
                   conversation={conversation}
                   isActive={conversation.id === activeConversationId}
-                  isHighlighted={conversation.id === highlightEmptyId}
+                  isHighlighted={conversation.id === highlightId}
                   onClick={() => onSelectConversation(conversation.id)}
                   onRename={() => handleRenameClick(conversation)}
                   onDelete={() => handleDeleteClick(conversation.id)}

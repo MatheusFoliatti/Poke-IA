@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useConversationStore } from '../../store/conversationStore';
 import { ConversationsSidebar } from '../Conversations';
+import { Conversation } from '../../types/conversation';
 import PokemonCard from '../Pokemon/PokemonCard';
 import SearchModal from '../Modal/SearchModal';
 import ComparisonModal from '../Modal/ComparisonModal';
@@ -75,13 +76,12 @@ export const PokedexMain: React.FC = () => {
   };
 
   // Handlers de conversas
-const handleNewConversation = async () => {
-  // Criar automaticamente sem prompt
+const handleNewConversation = async (): Promise<Conversation | null> => {
   const timestamp = new Date().toLocaleTimeString('pt-BR', { 
     hour: '2-digit', 
     minute: '2-digit' 
   });
-  await createConversation(`Nova Conversa ${timestamp}`);
+  return await createConversation(`Nova Conversa ${timestamp}`);
 };
 
   const handleSelectConversation = (id: number) => {
@@ -126,7 +126,7 @@ const handleNewConversation = async () => {
         activeConversationId={activeConversationId}
         isLoading={conversationsLoading}
         onSelectConversation={handleSelectConversation}
-        onNewConversation={handleNewConversation}
+        onNewConversation={handleNewConversation}  
         onRenameConversation={handleRenameConversation}
         onDeleteConversation={handleDeleteConversation}
       />
