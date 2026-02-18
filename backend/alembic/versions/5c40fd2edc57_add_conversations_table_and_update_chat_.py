@@ -1,8 +1,8 @@
 """add conversations table and update chat_messages
 
-Revision ID: [MANTENHA O ID GERADO]
-Revises: abc123def456
-Create Date: [MANTENHA A DATA]
+Revision ID: 5c40fd2edc57
+Revises: 0eecc261f479
+Create Date: 2026-02-17 15:43:00.000000
 
 """
 from alembic import op

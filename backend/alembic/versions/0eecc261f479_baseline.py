@@ -1,6 +1,6 @@
 """baseline
 
-Revision ID: abc123def456  # ← ID gerado automaticamente
+Revision ID: 0eecc261f479  # ← ID gerado automaticamente
 Revises: 
 Create Date: 2024-XX-XX XX:XX:XX
 
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'abc123def456'  # ← MESMO ID de cima
-down_revision = None        # ← IMPORTANTE: None
+revision = '0eecc261f479'
+down_revision = None
 branch_labels = None
 depends_on = None
 
