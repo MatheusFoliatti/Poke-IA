@@ -118,7 +118,7 @@ export const PokedexMain: React.FC = () => {
   };
 
   return (
-    <div className="pokedex-container">
+    <div className="pokedex-main-container">
       <ConversationsSidebar
         conversations={conversations}
         activeConversationId={activeConversationId}

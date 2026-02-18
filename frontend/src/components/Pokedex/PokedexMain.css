@@ -1,5 +1,5 @@
 /* ===== CONTAINER PRINCIPAL COM SIDEBAR ===== */
-.pokedex-container {
+.pokedex-main-container {
   display: flex;
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -266,7 +266,7 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .pokedex-container {
+  .pokedex-main-container {
     flex-direction: column;
   }
 
