@@ -24,6 +24,31 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
 }) => {
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [highlightEmptyId, setHighlightEmptyId] = useState<number | null>(null);
+
+  const handleNewConversation = () => {
+    // Verificar se já existe conversa vazia sem título personalizado
+    const emptyConversation = conversations.find(
+      (conv) => conv.message_count === 0 && 
+      (conv.title === 'Nova Conversa' || conv.title.startsWith('Conversa'))
+    );
+
+    if (emptyConversation) {
+      // Destacar conversa vazia existente
+      setHighlightEmptyId(emptyConversation.id);
+      onSelectConversation(emptyConversation.id);
+      
+      // Remover destaque após 2 segundos
+      setTimeout(() => {
+        setHighlightEmptyId(null);
+      }, 2000);
+      
+      return;
+    }
+
+    // Se não houver conversa vazia, criar nova
+    onNewConversation();
+  };
 
   const handleRenameClick = (conversation: Conversation) => {
     setRenamingId(conversation.id);
@@ -54,7 +79,7 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
         <h2>Conversas</h2>
         <button 
           className="new-conversation-btn"
-          onClick={onNewConversation}
+          onClick={handleNewConversation}
         >
           <span>➕</span>
           <span>Nova Conversa</span>
@@ -115,6 +140,7 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
                   key={conversation.id}
                   conversation={conversation}
                   isActive={conversation.id === activeConversationId}
+                  isHighlighted={conversation.id === highlightEmptyId}
                   onClick={() => onSelectConversation(conversation.id)}
                   onRename={() => handleRenameClick(conversation)}
                   onDelete={() => handleDeleteClick(conversation.id)}

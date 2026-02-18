@@ -75,12 +75,14 @@ export const PokedexMain: React.FC = () => {
   };
 
   // Handlers de conversas
-  const handleNewConversation = async () => {
-    const title = prompt('Nome da nova conversa:', 'Nova Conversa');
-    if (title && title.trim()) {
-      await createConversation(title.trim());
-    }
-  };
+const handleNewConversation = async () => {
+  // Criar automaticamente sem prompt
+  const timestamp = new Date().toLocaleTimeString('pt-BR', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+  await createConversation(`Nova Conversa ${timestamp}`);
+};
 
   const handleSelectConversation = (id: number) => {
     setActiveConversation(id);

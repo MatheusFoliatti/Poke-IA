@@ -4,6 +4,7 @@ import { Conversation } from '../../types/conversation';
 interface ConversationItemProps {
   conversation: Conversation;
   isActive: boolean;
+  isHighlighted?: boolean;
   onClick: () => void;
   onRename: () => void;
   onDelete: () => void;
@@ -12,6 +13,7 @@ interface ConversationItemProps {
 export const ConversationItem: React.FC<ConversationItemProps> = ({
   conversation,
   isActive,
+  isHighlighted = false,
   onClick,
   onRename,
   onDelete,
@@ -41,9 +43,15 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     onDelete();
   };
 
+  const classNames = [
+    'conversation-item',
+    isActive && 'active',
+    isHighlighted && 'highlighted',
+  ].filter(Boolean).join(' ');
+
   return (
     <div 
-      className={`conversation-item ${isActive ? 'active' : ''}`}
+      className={classNames}
       onClick={onClick}
     >
       <div className="conversation-title">

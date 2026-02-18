@@ -113,6 +113,33 @@
   border-radius: 0 2px 2px 0;
 }
 
+.conversation-item.highlighted {
+  animation: pulse-highlight 2s ease-in-out;
+}
+
+@keyframes pulse-highlight {
+  0%, 100% {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(0);
+  }
+  25% {
+    background: rgba(251, 191, 36, 0.3);
+    border-color: rgba(251, 191, 36, 0.6);
+    transform: translateX(8px) scale(1.02);
+  }
+  50% {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: rgba(251, 191, 36, 0.4);
+    transform: translateX(4px) scale(1.01);
+  }
+  75% {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.3);
+    transform: translateX(6px) scale(1.01);
+  }
+}
+
 .conversation-title {
   font-size: 14px;
   font-weight: 500;
