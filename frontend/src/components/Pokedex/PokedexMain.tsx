@@ -1,252 +1,234 @@
-import { useState, useEffect, useRef } from 'react';
-import { Pokemon } from '../../types/pokemon';
+import React, { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/chatStore';
-import { useAuthStore } from '../../store/authStore';
-import MessageBubble from '../Chat/MessageBubble';
-import ConfirmModal from '../Modal/ConfirmModal';
+import { useConversationStore } from '../../store/conversationStore';
+import { ConversationsSidebar } from '../Conversations';
+import PokemonCard from '../Pokemon/PokemonCard';
 import SearchModal from '../Modal/SearchModal';
 import ComparisonModal from '../Modal/ComparisonModal';
 import TeamModal from '../Modal/TeamModal';
 import { TeamFilters } from '../Tabs/TeamTab';
-import { api } from '../../services/axiosConfig';
 import './PokedexMain.css';
 
-function PokedexMain() {
-  const { messages, isLoading, sendMessage, clearHistory, loadHistory } = useChatStore();
-  const { user, logout } = useAuthStore();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
-  
-  // Estados para modais de confirmação
-  const [showClearModal, setShowClearModal] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  // Estados para modais de ação
+export const PokedexMain: React.FC = () => {
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+  
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Carregar histórico ao montar
+  // Store de chat
+  const { messages, sendMessage, loadHistory } = useChatStore();
+
+  // Store de conversas
+  const {
+    conversations,
+    activeConversationId,
+    isLoading: conversationsLoading,
+    fetchConversations,
+    createConversation,
+    setActiveConversation,
+    renameConversation,
+    deleteConversation,
+    updateConversationMessageCount,
+  } = useConversationStore();
+
+  // Carregar conversas ao montar componente
   useEffect(() => {
-    loadHistory();
-    fetchPokemonList();
-  }, []);
+    fetchConversations();
+  }, [fetchConversations]);
+
+  // Carregar histórico quando conversa ativa mudar
+  useEffect(() => {
+    if (activeConversationId) {
+      loadHistory(activeConversationId);
+    }
+  }, [activeConversationId, loadHistory]);
 
   // Auto-scroll ao adicionar mensagens
   useEffect(() => {
-    scrollToBottom();
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Enviar mensagem
+  const handleSendMessage = async () => {
+    if (inputMessage.trim() === '') return;
 
-  const fetchPokemonList = async () => {
+    const messageToSend = inputMessage;
+    setInputMessage('');
+    setIsTyping(true);
+
     try {
-      const response = await api.get('/api/chat/pokemon-list');
-      setPokemonList(response.data.pokemon || []);
-      console.log(`✅ Carregados ${response.data.count} Pokémon para autocomplete`);
+      await sendMessage(messageToSend, activeConversationId || undefined);
+      
+      if (activeConversationId) {
+        updateConversationMessageCount(activeConversationId);
+      }
     } catch (error) {
-      console.error('❌ Erro ao carregar lista de Pokémon:', error);
+      console.error('Erro ao enviar mensagem:', error);
+    } finally {
+      setIsTyping(false);
     }
   };
 
-  const handleSearch = (pokemon: string) => {
-    sendMessage(`Me fale sobre ${pokemon}`);
+  // Handlers de conversas
+  const handleNewConversation = async () => {
+    const title = prompt('Nome da nova conversa:', 'Nova Conversa');
+    if (title && title.trim()) {
+      await createConversation(title.trim());
+    }
   };
 
-  const handleCompare = (pokemon1: string, pokemon2: string) => {
-    sendMessage(`Compare ${pokemon1} e ${pokemon2}`);
+  const handleSelectConversation = (id: number) => {
+    setActiveConversation(id);
   };
 
-  const handleGenerateTeam = (filters: TeamFilters) => {
+  const handleRenameConversation = async (id: number, newTitle: string) => {
+    await renameConversation(id, newTitle);
+  };
+
+  const handleDeleteConversation = async (id: number) => {
+    await deleteConversation(id);
+  };
+
+  // Handlers dos modais (stubs para compatibilidade)
+  const handleSearch = async (pokemonName: string) => {
+    setInputMessage(`Me fale sobre ${pokemonName}`);
+    setShowSearchModal(false);
+    await handleSendMessage();
+  };
+
+  const handleCompare = async (pokemon1: string, pokemon2: string) => {
+    setInputMessage(`Compare ${pokemon1} e ${pokemon2}`);
+    setShowComparisonModal(false);
+    await handleSendMessage();
+  };
+
+  const handleGenerateTeam = async (filters: TeamFilters) => {
     let message = 'Monte uma equipe';
-    if (filters.type) {
-      message += ` de ${filters.type}`;
-    }
-    if (filters.strategy) {
-      message += ` ${filters.strategy}`;
-    }
-    sendMessage(message);
-  };
-
-  const handleClearHistory = async () => {
-    setShowClearModal(false);
-    await clearHistory();
-  };
-
-  const handleLogout = () => {
-    setShowLogoutModal(false);
-    logout();
+    if (filters.type) message += ` de ${filters.type}`;
+    if (filters.strategy) message += ` ${filters.strategy}`;
+    
+    setInputMessage(message);
+    setShowTeamModal(false);
+    await handleSendMessage();
   };
 
   return (
-    <div className="pokedex-main-container">
-      {/* Sidebar */}
-      <aside className="pokedex-sidebar">
-        <div className="sidebar-header">
-          <h1 className="sidebar-title">POKÉDEX AI</h1>
-          <p className="sidebar-subtitle">SYSTEM v2.0</p>
-        </div>
+    <div className="pokedex-container">
+      <ConversationsSidebar
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        isLoading={conversationsLoading}
+        onSelectConversation={handleSelectConversation}
+        onNewConversation={handleNewConversation}
+        onRenameConversation={handleRenameConversation}
+        onDeleteConversation={handleDeleteConversation}
+      />
 
-        <div className="user-profile">
-          <div className="user-avatar">
-            {user?.username?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <div className="user-info">
-            <div className="user-name">{user?.username || 'Usuário'}</div>
-            <div className="user-status">● Online</div>
-          </div>
-        </div>
-
-        <div className="sidebar-stats">
-          <div className="stats-title">ESTATÍSTICAS</div>
-          <div className="stat-item">
-            <span className="stat-label">Mensagens</span>
-            <span className="stat-value">{messages.length}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Pokémon Consultados</span>
-            <span className="stat-value">
-              {messages.filter(m => m.pokemon_data && !m.pokemon_data.is_comparison && !m.pokemon_data.is_team).length}
-            </span>
-          </div>
-        </div>
-
-        <div className="sidebar-suggestions">
-          <div className="suggestions-title">SUGESTÕES</div>
-          <button className="suggestion-item" onClick={() => handleSearch('pikachu')}>
-            Me fale sobre Pikachu
-          </button>
-          <button className="suggestion-item" onClick={() => handleCompare('charizard', 'blastoise')}>
-            Compare Charizard e Blastoise
-          </button>
-          <button className="suggestion-item" onClick={() => handleGenerateTeam({})}>
-            Monte uma equipe balanceada
-          </button>
-          <button className="suggestion-item" onClick={() => handleGenerateTeam({ type: 'dragon' })}>
-            Time de dragões
-          </button>
-        </div>
-
-        <div className="sidebar-actions">
-          <button className="action-button clear" onClick={() => setShowClearModal(true)}>
-            🗑️ Limpar Histórico
-          </button>
-          <button className="action-button logout" onClick={() => setShowLogoutModal(true)}>
-            🚪 Sair
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="pokedex-main">
-        {/* Header com Botões de Ação */}
-        <div className="chat-header">
-          <div className="action-buttons-header">
-            <button 
-              className="action-btn search-btn"
+      <div className="pokedex-main-content">
+        <div className="pokedex-header">
+          <h1>PokéIA - Assistente Pokémon</h1>
+          <div className="header-buttons">
+            <button
+              className="header-btn"
               onClick={() => setShowSearchModal(true)}
+              title="Buscar Pokémon"
             >
-              <span className="btn-icon">🔍</span>
-              <span className="btn-text">Buscar Pokémon</span>
+              🔍 Buscar
             </button>
-            <button 
-              className="action-btn compare-btn"
+            <button
+              className="header-btn"
               onClick={() => setShowComparisonModal(true)}
+              title="Comparar Pokémon"
             >
-              <span className="btn-icon">⚔️</span>
-              <span className="btn-text">Comparar</span>
+              ⚔️ Comparar
             </button>
-            <button 
-              className="action-btn team-btn"
+            <button
+              className="header-btn"
               onClick={() => setShowTeamModal(true)}
+              title="Montar Equipe"
             >
-              <span className="btn-icon">🎯</span>
-              <span className="btn-text">Montar Equipe</span>
+              🎯 Equipe
             </button>
           </div>
         </div>
 
-        {/* Área de Mensagens */}
-        <div className="messages-container">
-          <div className="messages-wrapper">
+        <div className="chat-area">
+          <div className="messages-container" ref={messagesContainerRef}>
             {messages.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🔴</div>
-                <h3 className="empty-title">Nenhuma conversa ainda</h3>
-                <p className="empty-subtitle">
-                  Use os botões acima para buscar Pokémon, comparar ou montar equipes!
-                </p>
+              <div className="welcome-message">
+                <h2>👋 Bem-vindo ao PokéIA!</h2>
+                <p>Pergunte sobre qualquer Pokémon ou use os botões acima para:</p>
+                <ul>
+                  <li>🔍 Buscar Pokémon específicos</li>
+                  <li>⚔️ Comparar dois Pokémon</li>
+                  <li>🎯 Montar equipes balanceadas</li>
+                </ul>
               </div>
             ) : (
-              messages.map((msg, index) => (
-                <MessageBubble key={`${msg.timestamp}-${index}`} message={msg} />
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`message ${msg.is_bot ? 'bot-message' : 'user-message'}`}
+                >
+                  <div className="message-content">{msg.content}</div>
+                  {msg.pokemon_data && (
+                    <PokemonCard pokemon={msg.pokemon_data} />
+                  )}
+                </div>
               ))
             )}
-
-            {isLoading && (
-              <div className="loading-container">
-                <div className="loading-avatar">🤖</div>
-                <div className="loading-dots">
-                  <div className="loading-dot"></div>
-                  <div className="loading-dot"></div>
-                  <div className="loading-dot"></div>
+            {isTyping && (
+              <div className="message bot-message">
+                <div className="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
               </div>
             )}
+          </div>
 
-            <div ref={messagesEndRef} />
+          <div className="input-area">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Pergunte sobre um Pokémon..."
+              disabled={isTyping}
+            />
+            <button onClick={handleSendMessage} disabled={isTyping}>
+              Enviar
+            </button>
           </div>
         </div>
-      </main>
 
-      {/* Modais de Ação */}
-      <SearchModal
-        isOpen={showSearchModal}
-        onClose={() => setShowSearchModal(false)}
-        pokemonList={pokemonList}
-        onSearch={handleSearch}
-      />
-
-      <ComparisonModal
-        isOpen={showComparisonModal}
-        onClose={() => setShowComparisonModal(false)}
-        pokemonList={pokemonList}
-        onCompare={handleCompare}
-      />
-
-      <TeamModal
-        isOpen={showTeamModal}
-        onClose={() => setShowTeamModal(false)}
-        onGenerateTeam={handleGenerateTeam}
-      />
-
-      {/* Modais de Confirmação */}
-      <ConfirmModal
-        isOpen={showClearModal}
-        title="Limpar Histórico"
-        message="Tem certeza que deseja limpar todo o histórico de conversas? Esta ação não pode ser desfeita."
-        confirmText="Sim, Limpar"
-        cancelText="Cancelar"
-        type="danger"
-        onConfirm={handleClearHistory}
-        onCancel={() => setShowClearModal(false)}
-      />
-
-      <ConfirmModal
-        isOpen={showLogoutModal}
-        title="Sair da Conta"
-        message="Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o sistema."
-        confirmText="Sim, Sair"
-        cancelText="Cancelar"
-        type="warning"
-        onConfirm={handleLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
+        {/* Modais com props corretas */}
+        <SearchModal
+          isOpen={showSearchModal}
+          onClose={() => setShowSearchModal(false)}
+          pokemonList={[]}
+          onSearch={handleSearch}
+        />
+        
+        <ComparisonModal
+          isOpen={showComparisonModal}
+          onClose={() => setShowComparisonModal(false)}
+          pokemonList={[]}
+          onCompare={handleCompare}
+        />
+        
+        <TeamModal
+          isOpen={showTeamModal}
+          onClose={() => setShowTeamModal(false)}
+          onGenerateTeam={handleGenerateTeam}
+        />
+      </div>
     </div>
   );
-}
-
-export default PokedexMain;
+};
