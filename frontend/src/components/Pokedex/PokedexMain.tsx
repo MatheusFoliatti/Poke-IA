@@ -9,15 +9,16 @@ import PokemonCard from '../Pokemon/PokemonCard';
 import SearchModal from '../Modal/SearchModal';
 import ComparisonModal from '../Modal/ComparisonModal';
 import TeamModal from '../Modal/TeamModal';
+import { LogoutModal } from '../Modal/LogoutModal';
 import { TeamFilters } from '../Tabs/TeamTab';
 import './PokedexMain.css';
 
 export const PokedexMain: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [showComparisonModal, setShowComparisonModal] = useState(false);
-  const [showTeamModal, setShowTeamModal] = useState(false);
+  
+  // Controle de modais - apenas 1 aberto por vez
+  const [activeModal, setActiveModal] = useState<'search' | 'comparison' | 'team' | 'logout' | null>(null);
   
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -102,25 +103,29 @@ export const PokedexMain: React.FC = () => {
     await deleteConversation(id);
   };
 
-  // Handler de logout
-  const handleLogout = () => {
-    if (window.confirm('Tem certeza que deseja sair?')) {
-      logout();
-      navigate('/login');
-    }
-  };
+  // Controle de modais
+  const openSearchModal = () => setActiveModal('search');
+  const openComparisonModal = () => setActiveModal('comparison');
+  const openTeamModal = () => setActiveModal('team');
+  const openLogoutModal = () => setActiveModal('logout');
+  const closeModal = () => setActiveModal(null);
 
   // Handlers dos modais
   const handleSearch = async (pokemonName: string) => {
     setInputMessage(`Me fale sobre ${pokemonName}`);
-    setShowSearchModal(false);
-    await handleSendMessage();
+    closeModal();
+    // Esperar o inputMessage ser atualizado
+    setTimeout(async () => {
+      await handleSendMessage();
+    }, 100);
   };
 
   const handleCompare = async (pokemon1: string, pokemon2: string) => {
     setInputMessage(`Compare ${pokemon1} e ${pokemon2}`);
-    setShowComparisonModal(false);
-    await handleSendMessage();
+    closeModal();
+    setTimeout(async () => {
+      await handleSendMessage();
+    }, 100);
   };
 
   const handleGenerateTeam = async (filters: TeamFilters) => {
@@ -129,8 +134,17 @@ export const PokedexMain: React.FC = () => {
     if (filters.strategy) message += ` ${filters.strategy}`;
     
     setInputMessage(message);
-    setShowTeamModal(false);
-    await handleSendMessage();
+    closeModal();
+    setTimeout(async () => {
+      await handleSendMessage();
+    }, 100);
+  };
+
+  // Handler de logout
+  const handleLogoutConfirm = () => {
+    logout();
+    navigate('/login');
+    closeModal();
   };
 
   return (
@@ -155,21 +169,21 @@ export const PokedexMain: React.FC = () => {
             <div className="header-buttons">
               <button
                 className="header-btn"
-                onClick={() => setShowSearchModal(true)}
+                onClick={openSearchModal}
                 title="Buscar Pokémon"
               >
                 🔍 Buscar
               </button>
               <button
                 className="header-btn"
-                onClick={() => setShowComparisonModal(true)}
+                onClick={openComparisonModal}
                 title="Comparar Pokémon"
               >
                 ⚔️ Comparar
               </button>
               <button
                 className="header-btn"
-                onClick={() => setShowTeamModal(true)}
+                onClick={openTeamModal}
                 title="Montar Equipe"
               >
                 🎯 Equipe
@@ -177,7 +191,7 @@ export const PokedexMain: React.FC = () => {
             </div>
             <button
               className="logout-btn"
-              onClick={handleLogout}
+              onClick={openLogoutModal}
               title="Sair"
             >
               🚪 Sair
@@ -238,25 +252,31 @@ export const PokedexMain: React.FC = () => {
           </div>
         </div>
 
-        {/* Modais */}
+        {/* Modais - Apenas 1 aberto por vez */}
         <SearchModal
-          isOpen={showSearchModal}
-          onClose={() => setShowSearchModal(false)}
+          isOpen={activeModal === 'search'}
+          onClose={closeModal}
           pokemonList={[]}
           onSearch={handleSearch}
         />
         
         <ComparisonModal
-          isOpen={showComparisonModal}
-          onClose={() => setShowComparisonModal(false)}
+          isOpen={activeModal === 'comparison'}
+          onClose={closeModal}
           pokemonList={[]}
           onCompare={handleCompare}
         />
         
         <TeamModal
-          isOpen={showTeamModal}
-          onClose={() => setShowTeamModal(false)}
+          isOpen={activeModal === 'team'}
+          onClose={closeModal}
           onGenerateTeam={handleGenerateTeam}
+        />
+
+        <LogoutModal
+          isOpen={activeModal === 'logout'}
+          onClose={closeModal}
+          onConfirm={handleLogoutConfirm}
         />
       </div>
     </div>

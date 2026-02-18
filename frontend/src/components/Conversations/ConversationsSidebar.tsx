@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Conversation } from '../../types/conversation';
 import { ConversationItem } from './ConversationItem';
+import { RenameConversationModal } from './RenameConversationModal';
+import { DeleteConversationModal } from './DeleteConversationModal';
 import './Conversations.css';
 
 interface ConversationsSidebarProps {
@@ -22,10 +24,13 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
   onRenameConversation,
   onDeleteConversation,
 }) => {
-  const [renamingId, setRenamingId] = useState<number | null>(null);
-  const [renameValue, setRenameValue] = useState('');
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [showToast, setShowToast] = useState(false);
+  
+  // Estados dos modais
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
 
   const handleNewConversation = async () => {
     const result = await onNewConversation();
@@ -55,26 +60,29 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
   };
 
   const handleRenameClick = (conversation: Conversation) => {
-    setRenamingId(conversation.id);
-    setRenameValue(conversation.title);
+    setSelectedConversation(conversation);
+    setRenameModalOpen(true);
   };
 
-  const handleRenameSubmit = (id: number) => {
-    if (renameValue.trim()) {
-      onRenameConversation(id, renameValue.trim());
+  const handleRenameSubmit = (newTitle: string) => {
+    if (selectedConversation) {
+      onRenameConversation(selectedConversation.id, newTitle);
     }
-    setRenamingId(null);
-    setRenameValue('');
+    setRenameModalOpen(false);
+    setSelectedConversation(null);
   };
 
-  const handleDeleteClick = (id: number) => {
-    const conversation = conversations.find(c => c.id === id);
-    if (!conversation) return;
+  const handleDeleteClick = (conversation: Conversation) => {
+    setSelectedConversation(conversation);
+    setDeleteModalOpen(true);
+  };
 
-    const confirmMsg = `Tem certeza que deseja deletar "${conversation.title}"?\n\nTodas as mensagens serão perdidas.`;
-    if (window.confirm(confirmMsg)) {
-      onDeleteConversation(id);
+  const handleDeleteConfirm = () => {
+    if (selectedConversation) {
+      onDeleteConversation(selectedConversation.id);
     }
+    setDeleteModalOpen(false);
+    setSelectedConversation(null);
   };
 
   return (
@@ -114,53 +122,39 @@ export const ConversationsSidebar: React.FC<ConversationsSidebarProps> = ({
         ) : (
           <>
             {conversations.map((conversation) => (
-              renamingId === conversation.id ? (
-                <div 
-                  key={conversation.id}
-                  className="conversation-item active"
-                  style={{ padding: '8px' }}
-                >
-                  <input
-                    type="text"
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => handleRenameSubmit(conversation.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleRenameSubmit(conversation.id);
-                      } else if (e.key === 'Escape') {
-                        setRenamingId(null);
-                        setRenameValue('');
-                      }
-                    }}
-                    autoFocus
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(59, 130, 246, 0.5)',
-                      borderRadius: '4px',
-                      color: '#e2e8f0',
-                      fontSize: '14px',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-              ) : (
-                <ConversationItem
-                  key={conversation.id}
-                  conversation={conversation}
-                  isActive={conversation.id === activeConversationId}
-                  isHighlighted={conversation.id === highlightId}
-                  onClick={() => onSelectConversation(conversation.id)}
-                  onRename={() => handleRenameClick(conversation)}
-                  onDelete={() => handleDeleteClick(conversation.id)}
-                />
-              )
+              <ConversationItem
+                key={conversation.id}
+                conversation={conversation}
+                isActive={conversation.id === activeConversationId}
+                isHighlighted={conversation.id === highlightId}
+                onClick={() => onSelectConversation(conversation.id)}
+                onRename={() => handleRenameClick(conversation)}
+                onDelete={() => handleDeleteClick(conversation)}
+              />
             ))}
           </>
         )}
       </div>
+
+      {/* Modais */}
+      {selectedConversation && (
+        <>
+          <RenameConversationModal
+            isOpen={renameModalOpen}
+            currentTitle={selectedConversation.title}
+            onClose={() => setRenameModalOpen(false)}
+            onRename={handleRenameSubmit}
+          />
+          
+          <DeleteConversationModal
+            isOpen={deleteModalOpen}
+            conversationTitle={selectedConversation.title}
+            messageCount={selectedConversation.message_count}
+            onClose={() => setDeleteModalOpen(false)}
+            onConfirm={handleDeleteConfirm}
+          />
+        </>
+      )}
     </div>
   );
 };

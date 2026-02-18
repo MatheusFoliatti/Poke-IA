@@ -1,4 +1,4 @@
-/* Modal Large */
+/* ===== MODAL BASE (mantém compatibilidade) ===== */
 .modal-large {
   max-width: 600px;
   width: 92%;
@@ -14,9 +14,9 @@
   position: absolute;
   top: 1.5rem;
   right: 1.5rem;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.2);
   border: none;
-  color: #9ca3af;
+  color: #fef3c7;
   font-size: 1.5rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -29,13 +29,13 @@
 }
 
 .modal-close:hover {
-  background: #374151;
+  background: rgba(0, 0, 0, 0.4);
   color: #ef4444;
   transform: rotate(90deg);
 }
 
 .modal-description {
-  color: #9ca3af;
+  color: #cbd5e1;
   font-size: 0.9375rem;
   margin-bottom: 1.5rem;
   text-align: center;
@@ -52,22 +52,128 @@
 }
 
 .modal-body-scrollable::-webkit-scrollbar-track {
-  background: #1f2937;
-}
-
-.modal-body-scrollable::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 }
 
-/* Search Form */
+.modal-body-scrollable::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  border-radius: 4px;
+}
+
+.modal-body-scrollable::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* ===== SEARCH FORM ===== */
 .search-form-modal {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* Comparison Form */
+.search-input-group {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 48px 14px 16px;
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.search-input:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.search-input::placeholder {
+  color: #64748b;
+}
+
+.search-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 20px;
+  pointer-events: none;
+}
+
+/* ===== SUGGESTIONS LIST ===== */
+.search-suggestions {
+  max-height: 400px;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.search-suggestions::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-suggestions::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+.suggestion-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.suggestion-item:hover {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  padding-left: 20px;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-icon {
+  opacity: 0.6;
+}
+
+.search-no-results {
+  padding: 60px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.search-no-results-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.search-no-results-text {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ===== COMPARISON FORM ===== */
 .comparison-form-modal {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -83,9 +189,31 @@
 }
 
 .input-label {
-  color: #d1d5db;
+  color: #e2e8f0;
   font-weight: 600;
   font-size: 0.875rem;
+  margin-bottom: 4px;
+}
+
+.comparison-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.comparison-input:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.comparison-input::placeholder {
+  color: #64748b;
 }
 
 .vs-divider-modal {
@@ -95,7 +223,19 @@
   padding-top: 1.75rem;
 }
 
-/* Team Form */
+.vs-text {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 24px;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+}
+
+/* ===== TEAM FORM ===== */
 .team-form-modal {
   margin-bottom: 1.5rem;
 }
@@ -106,7 +246,7 @@
 
 .filter-label {
   display: block;
-  color: #d1d5db;
+  color: #e2e8f0;
   font-weight: 600;
   font-size: 1rem;
   margin-bottom: 0.875rem;
@@ -119,11 +259,11 @@
 }
 
 .filter-button-modal {
-  background: #374151;
-  border: 2px solid #4b5563;
-  border-radius: 0.625rem;
-  padding: 0.75rem 0.5rem;
-  color: #d1d5db;
+  background: rgba(51, 65, 85, 0.5);
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 12px 8px;
+  color: #cbd5e1;
   font-weight: 600;
   font-size: 0.8125rem;
   cursor: pointer;
@@ -131,20 +271,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.375rem;
+  gap: 6px;
 }
 
 .filter-button-modal:hover {
-  background: #4b5563;
-  border-color: #60a5fa;
+  background: rgba(71, 85, 105, 0.5);
+  border-color: #fbbf24;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .filter-button-modal.active {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-color: #ef4444;
-  color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-color: #fbbf24;
+  color: #78350f;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
 }
 
 .filter-icon {
@@ -154,29 +295,35 @@
 .filter-text {
   font-size: 0.8125rem;
   white-space: nowrap;
+  font-weight: 600;
 }
 
-/* Button Primary */
-.modal-button.primary {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+/* ===== BUTTONS ===== */
+.modal-button {
+  padding: 12px 24px;
   border: none;
-  border-radius: 0.625rem;
-  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9375rem;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.625rem;
+  gap: 8px;
+}
+
+.modal-button.primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
 }
 
 .modal-button.primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 8px 16px rgba(251, 191, 36, 0.4);
 }
 
 .modal-button.primary:disabled {
@@ -189,7 +336,11 @@
   width: 100%;
 }
 
-/* Responsive */
+.modal-button-icon {
+  font-size: 18px;
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .modal-xlarge {
     width: 98%;
@@ -202,6 +353,7 @@
 
   .vs-divider-modal {
     padding-top: 0;
+    padding: 8px 0;
   }
 
   .vs-text {
@@ -211,6 +363,10 @@
   .filter-grid-modal {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .search-suggestions {
+    max-height: 300px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -219,6 +375,42 @@
   }
 
   .filter-button-modal {
-    padding: 0.625rem 0.375rem;
+    padding: 10px 6px;
+    font-size: 0.75rem;
   }
+
+  .filter-icon {
+    font-size: 1.25rem;
+  }
+
+  .search-input {
+    font-size: 14px;
+  }
+}
+
+/* ===== LOADING STATE ===== */
+.search-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: #cbd5e1;
+}
+
+.search-loading-spinner {
+  font-size: 32px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.search-loading-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #64748b;
 }
