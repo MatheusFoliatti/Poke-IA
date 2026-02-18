@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Text,
+    JSON,
+)
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -7,9 +16,10 @@ from .database import Base
 class User(Base):
     """
     Modelo de Usuário
-    
+
     Representa um usuário registrado no sistema com suas conversas.
     """
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -19,7 +29,9 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relacionamentos
-    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
+    conversations = relationship(
+        "Conversation", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Conversation(Base):
@@ -50,29 +62,17 @@ class Conversation(Base):
 
 
 class ChatMessage(Base):
-    """
-    Modelo de Mensagem de Chat
-
-    Representa uma mensagem individual em uma conversa.
-    Pode ser do usuário ou do bot (is_bot=True).
-    """
-
     __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, index=True)
     conversation_id = Column(
-        Integer,
-        ForeignKey("conversations.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False
     )
-    user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     content = Column(Text, nullable=False)
     is_bot = Column(Boolean, default=False, nullable=False)
+    pokemon_data = Column(JSON, nullable=True)  # ← ADICIONAR
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relacionamentos
+    user = relationship("User", back_populates="messages")
     conversation = relationship("Conversation", back_populates="messages")
-    user = relationship("User")
