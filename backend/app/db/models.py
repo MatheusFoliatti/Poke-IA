@@ -7,21 +7,19 @@ from .database import Base
 class User(Base):
     """
     Modelo de Usuário
-
+    
     Representa um usuário registrado no sistema com suas conversas.
     """
-
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relacionamentos
-    conversations = relationship(
-        "Conversation", back_populates="user", cascade="all, delete-orphan"
-    )
+    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
 
 
 class Conversation(Base):
