@@ -10,12 +10,14 @@ interface TeamModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerateTeam: (filters: TeamFilters) => void;
+  disabled?: boolean;
 }
 
 export default function TeamModal({ 
   isOpen, 
   onClose, 
-  onGenerateTeam 
+  onGenerateTeam,
+  disabled = false 
 }: TeamModalProps) {
   const [selectedType, setSelectedType] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState('');
@@ -51,6 +53,8 @@ export default function TeamModal({
   ];
 
   const handleGenerate = () => {
+    if (disabled) return;
+    
     const filters: TeamFilters = {};
     if (selectedType) filters.type = selectedType;
     if (selectedStrategy) filters.strategy = selectedStrategy;
@@ -62,7 +66,7 @@ export default function TeamModal({
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !disabled) {
       onClose();
     }
   };
@@ -72,7 +76,7 @@ export default function TeamModal({
       <div className="modal-container modal-xlarge">
         <div className="modal-header">
           <h2>🎯 Montar Equipe</h2>
-          <button className="modal-close" onClick={onClose}>
+          <button className="modal-close" onClick={onClose} disabled={disabled}>
             ✕
           </button>
         </div>
@@ -83,7 +87,6 @@ export default function TeamModal({
           </p>
 
           <div className="team-form-modal">
-            {/* Seleção de Tipo */}
             <div className="filter-section">
               <label className="filter-label">Tipo Principal (Opcional)</label>
               <div className="filter-grid-modal">
@@ -91,7 +94,8 @@ export default function TeamModal({
                   <button
                     key={type.name}
                     className={`filter-button-modal ${selectedType === type.name ? 'active' : ''}`}
-                    onClick={() => setSelectedType(selectedType === type.name ? '' : type.name)}
+                    onClick={() => !disabled && setSelectedType(selectedType === type.name ? '' : type.name)}
+                    disabled={disabled}
                   >
                     <span className="filter-icon">{type.icon}</span>
                     <span className="filter-text">{type.name}</span>
@@ -100,7 +104,6 @@ export default function TeamModal({
               </div>
             </div>
 
-            {/* Seleção de Estratégia */}
             <div className="filter-section">
               <label className="filter-label">Estratégia (Opcional)</label>
               <div className="filter-grid-modal">
@@ -108,7 +111,8 @@ export default function TeamModal({
                   <button
                     key={strategy.name}
                     className={`filter-button-modal ${selectedStrategy === strategy.name ? 'active' : ''}`}
-                    onClick={() => setSelectedStrategy(selectedStrategy === strategy.name ? '' : strategy.name)}
+                    onClick={() => !disabled && setSelectedStrategy(selectedStrategy === strategy.name ? '' : strategy.name)}
+                    disabled={disabled}
                   >
                     <span className="filter-icon">{strategy.icon}</span>
                     <span className="filter-text">{strategy.name}</span>
@@ -121,9 +125,10 @@ export default function TeamModal({
           <button
             className="modal-button primary full-width"
             onClick={handleGenerate}
+            disabled={disabled}
           >
             <span className="modal-button-icon">🎯</span>
-            Gerar Equipe
+            {disabled ? 'Processando...' : 'Gerar Equipe'}
           </button>
         </div>
       </div>

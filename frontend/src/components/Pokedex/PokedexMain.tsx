@@ -61,7 +61,7 @@ export const PokedexMain: React.FC = () => {
     }
   }, [messages]);
 
-  // Enviar mensagem
+  // Enviar mensagem via input
   const handleSendMessage = async () => {
     if (inputMessage.trim() === '') return;
 
@@ -71,6 +71,25 @@ export const PokedexMain: React.FC = () => {
 
     try {
       await sendMessage(messageToSend, activeConversationId || undefined);
+      
+      if (activeConversationId) {
+        updateConversationMessageCount(activeConversationId);
+      }
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  // Enviar mensagem diretamente (para modais)
+  const sendMessageDirectly = async (message: string) => {
+    if (!message.trim()) return;
+
+    setIsTyping(true);
+
+    try {
+      await sendMessage(message, activeConversationId || undefined);
       
       if (activeConversationId) {
         updateConversationMessageCount(activeConversationId);
@@ -111,33 +130,25 @@ export const PokedexMain: React.FC = () => {
   const closeModal = () => setActiveModal(null);
 
   // Handlers dos modais
-  const handleSearch = async (pokemonName: string) => {
-    setInputMessage(`Me fale sobre ${pokemonName}`);
+  const handleSearch = (pokemonName: string) => {
+    const message = `Me fale sobre ${pokemonName}`;
     closeModal();
-    // Esperar o inputMessage ser atualizado
-    setTimeout(async () => {
-      await handleSendMessage();
-    }, 100);
+    sendMessageDirectly(message);
   };
 
-  const handleCompare = async (pokemon1: string, pokemon2: string) => {
-    setInputMessage(`Compare ${pokemon1} e ${pokemon2}`);
+  const handleCompare = (pokemon1: string, pokemon2: string) => {
+    const message = `Compare ${pokemon1} e ${pokemon2}`;
     closeModal();
-    setTimeout(async () => {
-      await handleSendMessage();
-    }, 100);
+    sendMessageDirectly(message);
   };
 
-  const handleGenerateTeam = async (filters: TeamFilters) => {
+  const handleGenerateTeam = (filters: TeamFilters) => {
     let message = 'Monte uma equipe';
     if (filters.type) message += ` de ${filters.type}`;
     if (filters.strategy) message += ` ${filters.strategy}`;
     
-    setInputMessage(message);
     closeModal();
-    setTimeout(async () => {
-      await handleSendMessage();
-    }, 100);
+    sendMessageDirectly(message);
   };
 
   // Handler de logout
@@ -171,6 +182,7 @@ export const PokedexMain: React.FC = () => {
                 className="header-btn"
                 onClick={openSearchModal}
                 title="Buscar Pokémon"
+                disabled={isTyping}
               >
                 🔍 Buscar
               </button>
@@ -178,6 +190,7 @@ export const PokedexMain: React.FC = () => {
                 className="header-btn"
                 onClick={openComparisonModal}
                 title="Comparar Pokémon"
+                disabled={isTyping}
               >
                 ⚔️ Comparar
               </button>
@@ -185,6 +198,7 @@ export const PokedexMain: React.FC = () => {
                 className="header-btn"
                 onClick={openTeamModal}
                 title="Montar Equipe"
+                disabled={isTyping}
               >
                 🎯 Equipe
               </button>
@@ -258,6 +272,7 @@ export const PokedexMain: React.FC = () => {
           onClose={closeModal}
           pokemonList={[]}
           onSearch={handleSearch}
+          disabled={isTyping}
         />
         
         <ComparisonModal
@@ -265,12 +280,14 @@ export const PokedexMain: React.FC = () => {
           onClose={closeModal}
           pokemonList={[]}
           onCompare={handleCompare}
+          disabled={isTyping}
         />
         
         <TeamModal
           isOpen={activeModal === 'team'}
           onClose={closeModal}
           onGenerateTeam={handleGenerateTeam}
+          disabled={isTyping}
         />
 
         <LogoutModal

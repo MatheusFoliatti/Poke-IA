@@ -6,13 +6,15 @@ interface ComparisonModalProps {
   onClose: () => void;
   pokemonList: string[];
   onCompare: (pokemon1: string, pokemon2: string) => void;
+  disabled?: boolean;
 }
 
 export default function ComparisonModal({ 
   isOpen, 
   onClose, 
   pokemonList, 
-  onCompare 
+  onCompare,
+  disabled = false 
 }: ComparisonModalProps) {
   const [pokemon1, setPokemon1] = useState('');
   const [pokemon2, setPokemon2] = useState('');
@@ -66,6 +68,7 @@ export default function ComparisonModal({
   };
 
   const handleCompare = () => {
+    if (disabled) return;
     if (pokemon1.trim() && pokemon2.trim()) {
       onCompare(pokemon1.trim(), pokemon2.trim());
       onClose();
@@ -75,7 +78,7 @@ export default function ComparisonModal({
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !disabled) {
       onClose();
     }
   };
@@ -85,7 +88,7 @@ export default function ComparisonModal({
       <div className="modal-container modal-large">
         <div className="modal-header">
           <h2>⚔️ Comparar Pokémon</h2>
-          <button className="modal-close" onClick={onClose}>
+          <button className="modal-close" onClick={onClose} disabled={disabled}>
             ✕
           </button>
         </div>
@@ -96,7 +99,6 @@ export default function ComparisonModal({
           </p>
 
           <div className="comparison-form-modal">
-            {/* Pokémon 1 */}
             <div className="comparison-input-group">
               <label className="input-label">Pokémon 1</label>
               <div style={{ position: 'relative' }}>
@@ -107,6 +109,7 @@ export default function ComparisonModal({
                   onFocus={() => setShowSuggestions1(true)}
                   placeholder="Ex: Charizard"
                   className="comparison-input"
+                  disabled={disabled}
                 />
                 {showSuggestions1 && suggestions1.length > 0 && (
                   <div className="search-suggestions" style={{ position: 'absolute', top: '100%', width: '100%', zIndex: 10, marginTop: '4px' }}>
@@ -114,7 +117,8 @@ export default function ComparisonModal({
                       <div
                         key={index}
                         className="suggestion-item"
-                        onClick={() => handleSelect1(pokemon)}
+                        onClick={() => !disabled && handleSelect1(pokemon)}
+                        style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
                       >
                         <span className="suggestion-icon">⚡</span>
                         <span style={{ textTransform: 'capitalize' }}>{pokemon}</span>
@@ -125,12 +129,10 @@ export default function ComparisonModal({
               </div>
             </div>
 
-            {/* VS Divider */}
             <div className="vs-divider-modal">
               <span className="vs-text">VS</span>
             </div>
 
-            {/* Pokémon 2 */}
             <div className="comparison-input-group">
               <label className="input-label">Pokémon 2</label>
               <div style={{ position: 'relative' }}>
@@ -141,6 +143,7 @@ export default function ComparisonModal({
                   onFocus={() => setShowSuggestions2(true)}
                   placeholder="Ex: Blastoise"
                   className="comparison-input"
+                  disabled={disabled}
                 />
                 {showSuggestions2 && suggestions2.length > 0 && (
                   <div className="search-suggestions" style={{ position: 'absolute', top: '100%', width: '100%', zIndex: 10, marginTop: '4px' }}>
@@ -148,7 +151,8 @@ export default function ComparisonModal({
                       <div
                         key={index}
                         className="suggestion-item"
-                        onClick={() => handleSelect2(pokemon)}
+                        onClick={() => !disabled && handleSelect2(pokemon)}
+                        style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
                       >
                         <span className="suggestion-icon">⚡</span>
                         <span style={{ textTransform: 'capitalize' }}>{pokemon}</span>
@@ -163,10 +167,10 @@ export default function ComparisonModal({
           <button
             className="modal-button primary full-width"
             onClick={handleCompare}
-            disabled={!pokemon1.trim() || !pokemon2.trim()}
+            disabled={!pokemon1.trim() || !pokemon2.trim() || disabled}
           >
             <span className="modal-button-icon">⚔️</span>
-            Comparar Pokémon
+            {disabled ? 'Processando...' : 'Comparar Pokémon'}
           </button>
         </div>
       </div>

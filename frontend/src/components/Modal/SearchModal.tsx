@@ -6,13 +6,15 @@ interface SearchModalProps {
   onClose: () => void;
   pokemonList: string[];
   onSearch: (pokemonName: string) => void;
+  disabled?: boolean;
 }
 
 export default function SearchModal({ 
   isOpen, 
   onClose, 
   pokemonList, 
-  onSearch 
+  onSearch,
+  disabled = false 
 }: SearchModalProps) {
   const [searchValue, setSearchValue] = useState('');
   const [filteredPokemon, setFilteredPokemon] = useState<string[]>([]);
@@ -27,17 +29,17 @@ export default function SearchModal({
       return;
     }
 
-    // Filtrar Pokémon
     const filtered = pokemonList
       .filter(pokemon => 
         pokemon.toLowerCase().includes(value.toLowerCase())
       )
-      .slice(0, 50); // Limitar a 50 resultados
+      .slice(0, 50);
 
     setFilteredPokemon(filtered);
   };
 
   const handleSelectPokemon = (pokemon: string) => {
+    if (disabled) return;
     onSearch(pokemon);
     onClose();
     setSearchValue('');
@@ -45,7 +47,7 @@ export default function SearchModal({
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !disabled) {
       onClose();
     }
   };
@@ -55,7 +57,7 @@ export default function SearchModal({
       <div className="modal-container modal-large">
         <div className="modal-header">
           <h2>🔍 Buscar Pokémon</h2>
-          <button className="modal-close" onClick={onClose}>
+          <button className="modal-close" onClick={onClose} disabled={disabled}>
             ✕
           </button>
         </div>
@@ -74,6 +76,7 @@ export default function SearchModal({
                 placeholder="Ex: Pikachu, Charizard, Mewtwo..."
                 className="search-input"
                 autoFocus
+                disabled={disabled}
               />
               <span className="search-icon">🔍</span>
             </div>
@@ -84,8 +87,9 @@ export default function SearchModal({
                   filteredPokemon.map((pokemon, index) => (
                     <div
                       key={index}
-                      className="suggestion-item"
+                      className={`suggestion-item ${disabled ? 'disabled' : ''}`}
                       onClick={() => handleSelectPokemon(pokemon)}
+                      style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
                     >
                       <span className="suggestion-icon">⚡</span>
                       <span style={{ textTransform: 'capitalize' }}>{pokemon}</span>
