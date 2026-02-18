@@ -20,7 +20,28 @@ export default function Register() {
       await authService.register(username, email, password);
       navigate('/login');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erro ao criar conta');
+      // Extrair mensagem do erro corretamente
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        
+        // Se for array de erros de validação (FastAPI)
+        if (Array.isArray(detail)) {
+          const errorMessages = detail
+            .map((e: any) => e.msg || JSON.stringify(e))
+            .join(', ');
+          setError(errorMessages);
+        } else if (typeof detail === 'string') {
+          // Se for string simples
+          setError(detail);
+        } else if (typeof detail === 'object') {
+          // Se for objeto, tentar converter
+          setError(JSON.stringify(detail));
+        } else {
+          setError('Erro ao criar conta');
+        }
+      } else {
+        setError('Erro ao criar conta');
+      }
     } finally {
       setLoading(false);
     }

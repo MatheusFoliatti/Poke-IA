@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../../store/chatStore';
 import { useConversationStore } from '../../store/conversationStore';
+import { useAuthStore } from '../../store/authStore';
 import { ConversationsSidebar } from '../Conversations';
 import { Conversation } from '../../types/conversation';
 import PokemonCard from '../Pokemon/PokemonCard';
@@ -18,9 +20,13 @@ export const PokedexMain: React.FC = () => {
   const [showTeamModal, setShowTeamModal] = useState(false);
   
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Store de chat
   const { messages, sendMessage, loadHistory } = useChatStore();
+
+  // Store de auth
+  const logout = useAuthStore((state) => state.logout);
 
   // Store de conversas
   const {
@@ -76,13 +82,13 @@ export const PokedexMain: React.FC = () => {
   };
 
   // Handlers de conversas
-const handleNewConversation = async (): Promise<Conversation | null> => {
-  const timestamp = new Date().toLocaleTimeString('pt-BR', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-  return await createConversation(`Nova Conversa ${timestamp}`);
-};
+  const handleNewConversation = async (): Promise<Conversation | null> => {
+    const timestamp = new Date().toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    return await createConversation(`Nova Conversa ${timestamp}`);
+  };
 
   const handleSelectConversation = (id: number) => {
     setActiveConversation(id);
@@ -96,7 +102,15 @@ const handleNewConversation = async (): Promise<Conversation | null> => {
     await deleteConversation(id);
   };
 
-  // Handlers dos modais (stubs para compatibilidade)
+  // Handler de logout
+  const handleLogout = () => {
+    if (window.confirm('Tem certeza que deseja sair?')) {
+      logout();
+      navigate('/login');
+    }
+  };
+
+  // Handlers dos modais
   const handleSearch = async (pokemonName: string) => {
     setInputMessage(`Me fale sobre ${pokemonName}`);
     setShowSearchModal(false);
@@ -121,44 +135,57 @@ const handleNewConversation = async (): Promise<Conversation | null> => {
 
   return (
     <div className="pokedex-main-container">
+      {/* SIDEBAR DE CONVERSAS */}
       <ConversationsSidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
         isLoading={conversationsLoading}
         onSelectConversation={handleSelectConversation}
-        onNewConversation={handleNewConversation}  
+        onNewConversation={handleNewConversation}
         onRenameConversation={handleRenameConversation}
         onDeleteConversation={handleDeleteConversation}
       />
 
+      {/* CONTEÚDO PRINCIPAL */}
       <div className="pokedex-main-content">
+        {/* Header com botões */}
         <div className="pokedex-header">
           <h1>PokéIA - Assistente Pokémon</h1>
-          <div className="header-buttons">
+          <div className="header-actions">
+            <div className="header-buttons">
+              <button
+                className="header-btn"
+                onClick={() => setShowSearchModal(true)}
+                title="Buscar Pokémon"
+              >
+                🔍 Buscar
+              </button>
+              <button
+                className="header-btn"
+                onClick={() => setShowComparisonModal(true)}
+                title="Comparar Pokémon"
+              >
+                ⚔️ Comparar
+              </button>
+              <button
+                className="header-btn"
+                onClick={() => setShowTeamModal(true)}
+                title="Montar Equipe"
+              >
+                🎯 Equipe
+              </button>
+            </div>
             <button
-              className="header-btn"
-              onClick={() => setShowSearchModal(true)}
-              title="Buscar Pokémon"
+              className="logout-btn"
+              onClick={handleLogout}
+              title="Sair"
             >
-              🔍 Buscar
-            </button>
-            <button
-              className="header-btn"
-              onClick={() => setShowComparisonModal(true)}
-              title="Comparar Pokémon"
-            >
-              ⚔️ Comparar
-            </button>
-            <button
-              className="header-btn"
-              onClick={() => setShowTeamModal(true)}
-              title="Montar Equipe"
-            >
-              🎯 Equipe
+              🚪 Sair
             </button>
           </div>
         </div>
 
+        {/* Área de Chat */}
         <div className="chat-area">
           <div className="messages-container" ref={messagesContainerRef}>
             {messages.length === 0 ? (
@@ -195,6 +222,7 @@ const handleNewConversation = async (): Promise<Conversation | null> => {
             )}
           </div>
 
+          {/* Input de mensagem */}
           <div className="input-area">
             <input
               type="text"
@@ -210,7 +238,7 @@ const handleNewConversation = async (): Promise<Conversation | null> => {
           </div>
         </div>
 
-        {/* Modais com props corretas */}
+        {/* Modais */}
         <SearchModal
           isOpen={showSearchModal}
           onClose={() => setShowSearchModal(false)}

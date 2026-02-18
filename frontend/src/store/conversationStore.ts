@@ -48,16 +48,26 @@ export const useConversationStore = create<ConversationState>()(
           const response = await api.get<ConversationListResponse>('/api/conversations/');
           
           console.log(`✅ [STORE] ${response.data.total} conversas carregadas`);
+          
+          let conversations = response.data.conversations;
+          let activeId = get().activeConversationId;
+
+          // Se não tem nenhuma conversa, criar uma padrão
+          if (conversations.length === 0) {
+            console.log('📝 [STORE] Nenhuma conversa encontrada, criando conversa padrão...');
+            
+            const newConv = await get().createConversation('Conversa Principal');
+            if (newConv) {
+              conversations = [newConv];
+              activeId = newConv.id;
+            }
+          }
+
           set({ 
-            conversations: response.data.conversations,
+            conversations,
+            activeConversationId: activeId || (conversations.length > 0 ? conversations[0].id : null),
             isLoading: false 
           });
-
-          // Se não tem conversa ativa, definir a primeira
-          const { activeConversationId, conversations } = get();
-          if (!activeConversationId && conversations.length > 0) {
-            set({ activeConversationId: conversations[0].id });
-          }
         } catch (error: any) {
           console.error('❌ [STORE] Erro ao buscar conversas:', error);
           set({ 
@@ -69,34 +79,50 @@ export const useConversationStore = create<ConversationState>()(
 
       // Criar nova conversa
       createConversation: async (title = 'Nova Conversa') => {
-        set({ isLoading: true, error: null });
+      // Verificar se já existe conversa vazia
+      const { conversations } = get();
+      const emptyConversation = conversations.find(
+        (conv) => conv.message_count === 0 && 
+        (conv.title.startsWith('Nova Conversa') || conv.title === 'Conversa Principal')
+      );
+
+      if (emptyConversation) {
+        console.log(`⚠️ [STORE] Conversa vazia já existe (ID: ${emptyConversation.id}), retornando existente`);
         
-        try {
-          console.log(`➕ [STORE] Criando conversa: "${title}"`);
-          
-          const payload: ConversationCreateRequest = { title };
-          const response = await api.post<Conversation>('/api/conversations/', payload);
-          
-          const newConversation = response.data;
-          console.log(`✅ [STORE] Conversa criada: ID ${newConversation.id}`);
+        // Selecionar a conversa vazia existente
+        set({ activeConversationId: emptyConversation.id });
+        
+        return emptyConversation;
+      }
 
-          // Adicionar à lista
-          set((state) => ({
-            conversations: [newConversation, ...state.conversations],
-            activeConversationId: newConversation.id,
-            isLoading: false,
-          }));
+      set({ isLoading: true, error: null });
+      
+      try {
+        console.log(`➕ [STORE] Criando conversa: "${title}"`);
+        
+        const payload: ConversationCreateRequest = { title };
+        const response = await api.post<Conversation>('/api/conversations/', payload);
+        
+        const newConversation = response.data;
+        console.log(`✅ [STORE] Conversa criada: ID ${newConversation.id}`);
 
-          return newConversation;
-        } catch (error: any) {
-          console.error('❌ [STORE] Erro ao criar conversa:', error);
-          set({ 
-            error: error.response?.data?.detail || 'Erro ao criar conversa',
-            isLoading: false 
-          });
-          return null;
-        }
-      },
+        // Adicionar à lista
+        set((state) => ({
+          conversations: [newConversation, ...state.conversations],
+          activeConversationId: newConversation.id,
+          isLoading: false,
+        }));
+
+        return newConversation;
+      } catch (error: any) {
+        console.error('❌ [STORE] Erro ao criar conversa:', error);
+        set({ 
+          error: error.response?.data?.detail || 'Erro ao criar conversa',
+          isLoading: false 
+        });
+        return null;
+      }
+    },
 
       // Definir conversa ativa
       setActiveConversation: (id: number) => {
