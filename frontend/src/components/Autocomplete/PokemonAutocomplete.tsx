@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Pokemon } from '../../types/pokemon';
 import './PokemonAutocomplete.css';
 
@@ -10,22 +10,15 @@ interface PokemonAutocompleteProps {
   pokemonList: Pokemon[];
 }
 
-// Formata o nome do Pokémon para exibição
-// Ex: "charizard-mega-x" → "Charizard Mega X"
-// Ex: "blaziken-mega"    → "Blaziken Mega"
-// Ex: "pikachu"          → "Pikachu"
 const formatPokemonName = (name: string): string => {
   if (name.includes('-mega')) {
     const parts = name.split('-');
     const baseName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-
     if (parts.length === 3) {
       return `${baseName} Mega ${parts[2].toUpperCase()}`;
-    } else {
-      return `${baseName} Mega`;
     }
+    return `${baseName} Mega`;
   }
-
   return name.charAt(0).toUpperCase() + name.slice(1);
 };
 
@@ -44,89 +37,73 @@ function PokemonAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // ─────────────────────────────────────────────────────────────
-  // Calcula onde a lista de sugestões vai aparecer (acima ou abaixo
-  // do input), baseado no espaço disponível na tela.
-  // Roda sempre que showSuggestions muda.
-  // ─────────────────────────────────────────────────────────────
+  // Recalcula posição do dropdown (position:fixed) sempre que abre
+  // Também ouve resize e scroll para manter posição correta dentro de modais
   useEffect(() => {
-    if (showSuggestions && inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
+    const updatePosition = () => {
+      if (showSuggestions && inputRef.current) {
+        const rect = inputRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
 
-      if (spaceAbove > spaceBelow && spaceAbove > 300) {
-        // Mais espaço em cima → mostra acima
-        setPosition({
-          top: rect.top - 308, // 300px de altura + 8px de gap
-          left: rect.left,
-          width: rect.width,
-        });
-      } else {
-        // Padrão → mostra abaixo
-        setPosition({
-          top: rect.bottom + 8,
-          left: rect.left,
-          width: rect.width,
-        });
+        if (spaceAbove > spaceBelow && spaceAbove > 300) {
+          setPosition({ top: rect.top - 308, left: rect.left, width: rect.width });
+        } else {
+          setPosition({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+        }
       }
-    }
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
   }, [showSuggestions]);
 
-  // ─────────────────────────────────────────────────────────────
-  // FILTRO COM DEBOUNCE DE 300ms
-  //
-  // Sem debounce: filtra os 1350+ Pokémon a cada tecla digitada.
-  // Com debounce: espera o usuário parar de digitar por 300ms
-  // antes de filtrar. Evita re-renders desnecessários.
-  //
-  // Como funciona:
-  // 1. Usuário digita → setTimeout de 300ms é agendado
-  // 2. Usuário digita outra tecla antes de 300ms → clearTimeout
-  //    cancela o anterior e agenda um novo
-  // 3. Usuário para de digitar → após 300ms o filtro roda
-  //
-  // O "return () => clearTimeout(timer)" é o cleanup do useEffect:
-  // roda automaticamente antes de cada nova execução do efeito.
-  // ─────────────────────────────────────────────────────────────
+  // Filtro com debounce de 300ms
   useEffect(() => {
     const timer = setTimeout(() => {
       if (value.length >= 2) {
         const filtered = pokemonList
           .filter((pokemon) => {
-            const searchValue = value.toLowerCase();
-            const pokemonName = pokemon.name.toLowerCase();
-            const formattedName = formatPokemonName(pokemon.name).toLowerCase();
-
-            // Aceita busca pelo nome original ("charizard-mega-x")
-            // ou pelo nome formatado ("Charizard Mega X")
+            const search = value.toLowerCase();
             return (
-              pokemonName.includes(searchValue) ||
-              formattedName.includes(searchValue)
+              pokemon.name.toLowerCase().includes(search) ||
+              formatPokemonName(pokemon.name).toLowerCase().includes(search)
             );
           })
-          .slice(0, 8); // Máximo de 8 sugestões visíveis
-
+          .slice(0, 8);
         setSuggestions(filtered);
         setShowSuggestions(filtered.length > 0);
       } else {
-        // Menos de 2 caracteres → limpa as sugestões
         setSuggestions([]);
         setShowSuggestions(false);
       }
+      setSelectedIndex(-1);
+    }, 300);
 
-      setSelectedIndex(-1); // Reseta a seleção por teclado
-    }, 300); // ← Debounce de 300ms
-
-    return () => clearTimeout(timer); // ← Cancela o timer anterior
+    return () => clearTimeout(timer);
   }, [value, pokemonList]);
 
-  // ─────────────────────────────────────────────────────────────
-  // Quando o usuário seleciona um Pokémon (click ou Enter):
-  // - Atualiza o valor do input (onChange)
-  // - Notifica o pai (onSelect) para que ele envie a busca
-  // - Fecha as sugestões
-  // ─────────────────────────────────────────────────────────────
+  // Fecha dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSelect = (pokemonName: string) => {
     onChange(pokemonName);
     onSelect(pokemonName);
@@ -134,36 +111,21 @@ function PokemonAutocomplete({
     setSuggestions([]);
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // Navegação por teclado dentro da lista de sugestões:
-  // ↓ ArrowDown → próximo item
-  // ↑ ArrowUp   → item anterior
-  // Enter       → seleciona o item em destaque
-  // Escape      → fecha as sugestões
-  // ─────────────────────────────────────────────────────────────
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions) return;
-
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : prev
-        );
+        setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
         break;
-
       case 'ArrowUp':
         e.preventDefault();
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
         break;
-
       case 'Enter':
         e.preventDefault();
-        if (selectedIndex >= 0) {
-          handleSelect(suggestions[selectedIndex].name);
-        }
+        if (selectedIndex >= 0) handleSelect(suggestions[selectedIndex].name);
         break;
-
       case 'Escape':
         setShowSuggestions(false);
         break;
@@ -178,13 +140,14 @@ function PokemonAutocomplete({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
+        onFocus={() => {
+          if (value.length >= 2 && suggestions.length > 0) setShowSuggestions(true);
+        }}
         placeholder={placeholder}
         className="autocomplete-input"
         autoComplete="off"
       />
 
-      {/* Lista de sugestões — renderizada com position: fixed para
-          não ser cortada por qualquer overflow: hidden dos pais */}
       {showSuggestions && (
         <div
           ref={suggestionsRef}
@@ -193,6 +156,7 @@ function PokemonAutocomplete({
             top: `${position.top}px`,
             left: `${position.left}px`,
             width: `${position.width}px`,
+            zIndex: 99999,
           }}
         >
           {suggestions.map((pokemon, index) => (
@@ -200,10 +164,12 @@ function PokemonAutocomplete({
               key={pokemon.name}
               className={`suggestion-item ${index === selectedIndex ? 'selected' : ''}`}
               data-mega={pokemon.name.includes('-mega') ? 'true' : 'false'}
-              onClick={() => handleSelect(pokemon.name)}
+              onMouseDown={(e) => {
+                e.preventDefault(); // evita blur antes do clique
+                handleSelect(pokemon.name);
+              }}
               onMouseEnter={() => setSelectedIndex(index)}
             >
-              {/* Sprite do Pokémon com fallback para imagem padrão */}
               <img
                 src={pokemon.sprite}
                 alt={pokemon.name}
@@ -215,9 +181,7 @@ function PokemonAutocomplete({
                   e.currentTarget.style.opacity = '0.5';
                 }}
               />
-              <span className="pokemon-name">
-                {formatPokemonName(pokemon.name)}
-              </span>
+              <span className="pokemon-name">{formatPokemonName(pokemon.name)}</span>
             </div>
           ))}
         </div>
