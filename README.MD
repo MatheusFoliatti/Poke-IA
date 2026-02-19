@@ -52,11 +52,11 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 
 ### 🎨 Experiência Visual Única
 
-- **Animação de abertura da Pokédex** após login
+- **Animação de abertura da Pokédex** integrada ao fluxo de login _(v2.2.0)_
 - **Sidebar de conversas** com navegação entre múltiplos chats
 - **Interface com sistema de abas** (Buscar, Comparar, Montar Equipe)
-- **Autocomplete com sprites** dos Pokémon em tempo real
-- **Modais personalizados** para ações críticas
+- **Autocomplete com sprites** em todos os modais em tempo real _(v2.2.0)_
+- **Modais padronizados** com visual unificado _(v2.2.0)_
 - **Design responsivo** otimizado para mobile e desktop
 
 ---
@@ -81,6 +81,15 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 - ✅ **Histórico isolado por conversa** — cada chat tem seu próprio contexto
 - ✅ **Migração automática** do histórico existente para o novo modelo
 - ✅ **Estado de carregamento e empty state** na sidebar
+
+### 🎨 Melhorias de UX _(novo em v2.2.0)_
+
+- ✅ **Animação da Pokédex** exibida ao fazer login antes do chat carregar
+- ✅ **Autocomplete com sprites** funcionando nos modais Buscar e Comparar
+- ✅ **Debounce de 300ms** no autocomplete — performance com 1350+ Pokémon
+- ✅ **Dropdown do autocomplete** com z-index correto dentro de modais
+- ✅ **Visual dos modais padronizado** — Buscar e Comparar agora têm o mesmo estilo do Montar Equipe
+- ✅ **Endpoint `/api/chat/pokemon-list`** corrigido para retornar `{ name, sprite }[]`
 
 ### 🔍 Busca Inteligente de Pokémon
 
@@ -490,13 +499,13 @@ Poke-IA/
 
 ### Conversas _(novo v2.1.0)_
 
-| Método | Endpoint                              | Auth    | Descrição                      |
-| ------ | ------------------------------------- | ------- | ------------------------------ |
-| GET    | /api/conversations/                   | Privado | Listar conversas do usuário    |
-| POST   | /api/conversations/                   | Privado | Criar nova conversa            |
-| PATCH  | /api/conversations/{id}               | Privado | Renomear conversa              |
-| DELETE | /api/conversations/{id}               | Privado | Deletar conversa e mensagens   |
-| GET    | /api/conversations/{id}/messages      | Privado | Buscar mensagens da conversa   |
+| Método | Endpoint                         | Auth    | Descrição                    |
+| ------ | -------------------------------- | ------- | ---------------------------- |
+| GET    | /api/conversations/              | Privado | Listar conversas do usuário  |
+| POST   | /api/conversations/              | Privado | Criar nova conversa          |
+| PATCH  | /api/conversations/{id}          | Privado | Renomear conversa            |
+| DELETE | /api/conversations/{id}          | Privado | Deletar conversa e mensagens |
+| GET    | /api/conversations/{id}/messages | Privado | Buscar mensagens da conversa |
 
 ---
 
@@ -549,13 +558,20 @@ Poke-IA/
 - [x] Migração automática do histórico existente
 - [x] Migration Alembic com upgrade/downgrade
 
-### 🚧 v2.2 - Próxima
+### ✅ v2.2 - Concluído
 
-- [ ] Testes unitários
+- [x] Animação da Pokédex integrada ao fluxo de login
+- [x] Autocomplete com sprites nos modais Buscar e Comparar
+- [x] Debounce de 300ms no PokemonAutocomplete
+- [x] Visual dos modais padronizado (Buscar, Comparar, Equipe)
+- [x] Endpoint `/api/chat/pokemon-list` corrigido para retornar `{ name, sprite }[]`
+
+### 🚧 v2.3 - Próxima
+
+- [ ] Testes unitários (frontend e backend)
 - [ ] CI/CD com GitHub Actions
 - [ ] Toast global unificado
-- [ ] Animações (PokedexAnimation, PokeballLoader)
-- [ ] Debounce no autocomplete
+- [ ] PWA offline-first
 
 ### 🎯 v3.0 - Futuro
 
