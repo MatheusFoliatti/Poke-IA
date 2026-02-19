@@ -1,11 +1,5 @@
 /**
  * Zustand Store para Gerenciamento de Conversas
- * 
- * Responsável por:
- * - Carregar lista de conversas
- * - Criar, renomear e deletar conversas
- * - Gerenciar conversa ativa
- * - Persistir conversa ativa no localStorage
  */
 
 import { create } from 'zustand';
@@ -14,13 +8,11 @@ import api from '../services/api';
 import { Conversation, ConversationListResponse, ConversationCreateRequest } from '../types/conversation';
 
 interface ConversationState {
-  // Estado
   conversations: Conversation[];
   activeConversationId: number | null;
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   fetchConversations: () => Promise<void>;
   createConversation: (title?: string) => Promise<Conversation | null>;
   setActiveConversation: (id: number) => void;
@@ -28,187 +20,144 @@ interface ConversationState {
   deleteConversation: (id: number) => Promise<void>;
   clearConversations: () => void;
   updateConversationMessageCount: (conversationId: number) => void;
+  // ← novo: atualiza título localmente sem chamar API
+  updateConversationTitle: (conversationId: number, newTitle: string) => void;
 }
 
 export const useConversationStore = create<ConversationState>()(
   persist(
     (set, get) => ({
-      // Estado inicial
       conversations: [],
       activeConversationId: null,
       isLoading: false,
       error: null,
 
-      // Buscar todas as conversas
       fetchConversations: async () => {
         set({ isLoading: true, error: null });
-        
+
         try {
           console.log('📂 [STORE] Buscando conversas...');
           const response = await api.get<ConversationListResponse>('/api/conversations/');
-          
+
           console.log(`✅ [STORE] ${response.data.total} conversas carregadas`);
-          
+
           let conversations = response.data.conversations;
           let activeId = get().activeConversationId;
 
           // Se não tem nenhuma conversa, criar uma padrão
           if (conversations.length === 0) {
             console.log('📝 [STORE] Nenhuma conversa encontrada, criando conversa padrão...');
-            
-            const newConv = await get().createConversation('Conversa Principal');
+            const newConv = await get().createConversation('Nova Conversa');
             if (newConv) {
               conversations = [newConv];
               activeId = newConv.id;
             }
           }
 
-          set({ 
+          // Garantir que a conversa ativa ainda existe
+          const activeStillExists = conversations.some(c => c.id === activeId);
+
+          set({
             conversations,
-            activeConversationId: activeId || (conversations.length > 0 ? conversations[0].id : null),
-            isLoading: false 
+            activeConversationId: activeStillExists
+              ? activeId
+              : (conversations.length > 0 ? conversations[0].id : null),
+            isLoading: false,
+            error: null,
           });
         } catch (error: any) {
           console.error('❌ [STORE] Erro ao buscar conversas:', error);
-          set({ 
-            error: error.response?.data?.detail || 'Erro ao carregar conversas',
-            isLoading: false 
-          });
+          set({ isLoading: false, error: 'Erro ao carregar conversas' });
         }
       },
 
-      // Criar nova conversa
       createConversation: async (title = 'Nova Conversa') => {
-      // Verificar se já existe conversa vazia
-      const { conversations } = get();
-      const emptyConversation = conversations.find(
-        (conv) => conv.message_count === 0 && 
-        (conv.title.startsWith('Nova Conversa') || conv.title === 'Conversa Principal')
-      );
+        try {
+          const response = await api.post('/api/conversations/', { title });
+          const newConv: Conversation = response.data;
 
-      if (emptyConversation) {
-        console.log(`⚠️ [STORE] Conversa vazia já existe (ID: ${emptyConversation.id}), retornando existente`);
-        
-        // Selecionar a conversa vazia existente
-        set({ activeConversationId: emptyConversation.id });
-        
-        return emptyConversation;
-      }
+          set((state) => ({
+            conversations: [newConv, ...state.conversations],
+            activeConversationId: newConv.id,
+          }));
 
-      set({ isLoading: true, error: null });
-      
-      try {
-        console.log(`➕ [STORE] Criando conversa: "${title}"`);
-        
-        const payload: ConversationCreateRequest = { title };
-        const response = await api.post<Conversation>('/api/conversations/', payload);
-        
-        const newConversation = response.data;
-        console.log(`✅ [STORE] Conversa criada: ID ${newConversation.id}`);
+          console.log(`✅ [STORE] Conversa criada: "${newConv.title}" (ID: ${newConv.id})`);
+          return newConv;
+        } catch (error) {
+          console.error('❌ [STORE] Erro ao criar conversa:', error);
+          return null;
+        }
+      },
 
-        // Adicionar à lista
-        set((state) => ({
-          conversations: [newConversation, ...state.conversations],
-          activeConversationId: newConversation.id,
-          isLoading: false,
-        }));
-
-        return newConversation;
-      } catch (error: any) {
-        console.error('❌ [STORE] Erro ao criar conversa:', error);
-        set({ 
-          error: error.response?.data?.detail || 'Erro ao criar conversa',
-          isLoading: false 
-        });
-        return null;
-      }
-    },
-
-      // Definir conversa ativa
       setActiveConversation: (id: number) => {
-        console.log(`📌 [STORE] Conversa ativa: ${id}`);
         set({ activeConversationId: id });
       },
 
-      // Renomear conversa
       renameConversation: async (id: number, newTitle: string) => {
         try {
-          console.log(`✏️ [STORE] Renomeando conversa ${id}: "${newTitle}"`);
-          
           await api.patch(`/api/conversations/${id}`, { title: newTitle });
-          
-          // Atualizar na lista
+
           set((state) => ({
-            conversations: state.conversations.map((conv) =>
-              conv.id === id 
-                ? { ...conv, title: newTitle, updated_at: new Date().toISOString() }
-                : conv
+            conversations: state.conversations.map((c) =>
+              c.id === id ? { ...c, title: newTitle } : c
             ),
           }));
 
-          console.log(`✅ [STORE] Conversa ${id} renomeada`);
-        } catch (error: any) {
+          console.log(`✅ [STORE] Conversa ${id} renomeada para "${newTitle}"`);
+        } catch (error) {
           console.error('❌ [STORE] Erro ao renomear conversa:', error);
-          set({ error: error.response?.data?.detail || 'Erro ao renomear conversa' });
         }
       },
 
-      // Deletar conversa
       deleteConversation: async (id: number) => {
         try {
-          console.log(`🗑️ [STORE] Deletando conversa ${id}`);
-          
           await api.delete(`/api/conversations/${id}`);
-          
-          const { activeConversationId, conversations } = get();
-          const remainingConversations = conversations.filter((conv) => conv.id !== id);
 
-          // Se deletou a conversa ativa, mudar para outra
-          let newActiveId = activeConversationId;
-          if (activeConversationId === id) {
-            newActiveId = remainingConversations.length > 0 
-              ? remainingConversations[0].id 
-              : null;
-          }
+          const remaining = get().conversations.filter((c) => c.id !== id);
+          const activeId = get().activeConversationId;
 
           set({
-            conversations: remainingConversations,
-            activeConversationId: newActiveId,
+            conversations: remaining,
+            activeConversationId:
+              activeId === id
+                ? (remaining.length > 0 ? remaining[0].id : null)
+                : activeId,
           });
 
           console.log(`✅ [STORE] Conversa ${id} deletada`);
-        } catch (error: any) {
+        } catch (error) {
           console.error('❌ [STORE] Erro ao deletar conversa:', error);
-          set({ error: error.response?.data?.detail || 'Erro ao deletar conversa' });
         }
       },
 
-      // Limpar todas as conversas (logout)
       clearConversations: () => {
-        console.log('🧹 [STORE] Limpando conversas');
-        set({
-          conversations: [],
-          activeConversationId: null,
-          isLoading: false,
-          error: null,
-        });
+        set({ conversations: [], activeConversationId: null });
       },
 
-      // Atualizar contador de mensagens de uma conversa
       updateConversationMessageCount: (conversationId: number) => {
         set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === conversationId
-              ? { ...conv, message_count: conv.message_count + 2, updated_at: new Date().toISOString() }
-              : conv
+          conversations: state.conversations.map((c) =>
+            c.id === conversationId
+              ? { ...c, message_count: (c.message_count || 0) + 2 } // +1 user +1 bot
+              : c
           ),
         }));
       },
+
+      // Atualiza título localmente — chamado após backend gerar título automático
+      updateConversationTitle: (conversationId: number, newTitle: string) => {
+        set((state) => ({
+          conversations: state.conversations.map((c) =>
+            c.id === conversationId ? { ...c, title: newTitle } : c
+          ),
+        }));
+        console.log(`✏️ [STORE] Título atualizado localmente: "${newTitle}"`);
+      },
     }),
     {
-      name: 'conversation-storage', // nome no localStorage
+      name: 'conversation-storage',
       partialize: (state) => ({
-        activeConversationId: state.activeConversationId, // persistir apenas conversa ativa
+        activeConversationId: state.activeConversationId,
       }),
     }
   )
