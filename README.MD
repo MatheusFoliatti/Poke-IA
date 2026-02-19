@@ -490,13 +490,13 @@ Poke-IA/
 
 ### Conversas _(novo v2.1.0)_
 
-| Método | Endpoint                              | Auth    | Descrição                      |
-| ------ | ------------------------------------- | ------- | ------------------------------ |
-| GET    | /api/conversations/                   | Privado | Listar conversas do usuário    |
-| POST   | /api/conversations/                   | Privado | Criar nova conversa            |
-| PATCH  | /api/conversations/{id}               | Privado | Renomear conversa              |
-| DELETE | /api/conversations/{id}               | Privado | Deletar conversa e mensagens   |
-| GET    | /api/conversations/{id}/messages      | Privado | Buscar mensagens da conversa   |
+| Método | Endpoint                         | Auth    | Descrição                    |
+| ------ | -------------------------------- | ------- | ---------------------------- |
+| GET    | /api/conversations/              | Privado | Listar conversas do usuário  |
+| POST   | /api/conversations/              | Privado | Criar nova conversa          |
+| PATCH  | /api/conversations/{id}          | Privado | Renomear conversa            |
+| DELETE | /api/conversations/{id}          | Privado | Deletar conversa e mensagens |
+| GET    | /api/conversations/{id}/messages | Privado | Buscar mensagens da conversa |
 
 ---
 
@@ -513,6 +513,7 @@ Poke-IA/
 ### Interface de Montagem de Equipe
 
 ![Visual](assets/MontarEquipe.png)
+![Visual](assets/MontarEquipeChat.png)
 
 ### Interface de Comparação de Pokemon
 

@@ -6,7 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 import { ConversationsSidebar } from '../Conversations';
 import { Conversation } from '../../types/conversation';
 import { Pokemon } from '../../types/pokemon';
-import PokemonCard from '../Pokemon/PokemonCard';
+import MessageBubble from '../Chat/MessageBubble';
 import SearchModal from '../Modal/SearchModal';
 import ComparisonModal from '../Modal/ComparisonModal';
 import TeamModal from '../Modal/TeamModal';
@@ -246,16 +246,11 @@ export const PokedexMain: React.FC = () => {
                 </ul>
               </div>
             ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`message ${msg.is_bot ? 'bot-message' : 'user-message'}`}
-                >
-                  <div className="message-content">{msg.content}</div>
-                  {msg.pokemon_data && (
-                    <PokemonCard pokemon={msg.pokemon_data} />
-                  )}
-                </div>
+              messages.map((msg, index) => (
+              <MessageBubble
+                key={`${msg.id ?? index}-${index}`}
+                message={msg}
+              />
               ))
             )}
 
