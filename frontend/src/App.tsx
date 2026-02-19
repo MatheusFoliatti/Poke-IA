@@ -1,12 +1,25 @@
+// src/App.tsx
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import { PokedexMain } from './components/Pokedex/PokedexMain';
+import PokedexAnimation from './components/Pokedex/PokedexAnimation';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+}
+
+function PokedexRoute() {
+  const [animationDone, setAnimationDone] = useState(false);
+
+  if (!animationDone) {
+    return <PokedexAnimation onComplete={() => setAnimationDone(true)} />;
+  }
+
+  return <PokedexMain />;
 }
 
 function App() {
@@ -24,7 +37,7 @@ function App() {
           path="/pokedex"
           element={
             <ProtectedRoute>
-              <PokedexMain />
+              <PokedexRoute />
             </ProtectedRoute>
           }
         />
