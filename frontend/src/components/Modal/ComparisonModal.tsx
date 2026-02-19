@@ -1,5 +1,4 @@
-// src/components/Modal/ComparisonModal.tsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Pokemon } from '../../types/pokemon';
 import PokemonAutocomplete from '../Autocomplete/PokemonAutocomplete';
 import './SearchModal.css';
@@ -11,12 +10,7 @@ interface ComparisonModalProps {
   onCompare: (pokemon1: string, pokemon2: string) => void;
 }
 
-export default function ComparisonModal({
-  isOpen,
-  onClose,
-  pokemonList,
-  onCompare,
-}: ComparisonModalProps) {
+function ComparisonModal({ isOpen, onClose, pokemonList, onCompare }: ComparisonModalProps) {
   const [pokemon1, setPokemon1] = useState('');
   const [pokemon2, setPokemon2] = useState('');
 
@@ -31,21 +25,29 @@ export default function ComparisonModal({
     }
   };
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  const canCompare = pokemon1.trim() && pokemon2.trim();
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={handleBackdropClick}>
+      <div className="modal-container modal-large">
+
         <div className="modal-header">
-          <span className="modal-icon">⚔️</span>
-          <h2 className="modal-title">Comparar Pokémon</h2>
+          <h2>⚔️ Comparar Pokémon</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
-        <div className="modal-body">
+        {/* overflow: visible permite os dropdowns do autocomplete aparecerem fora do container */}
+        <div className="modal-content" style={{ overflow: 'visible' }}>
           <p className="modal-description">
             Escolha dois Pokémon para comparar suas stats e descobrir qual é mais forte
           </p>
 
-          <div className="comparison-form-modal">
+          <div className="comparison-form-modal" style={{ overflow: 'visible' }}>
+
             <div className="comparison-input-group">
               <label className="input-label">Primeiro Pokémon</label>
               <PokemonAutocomplete
@@ -71,18 +73,22 @@ export default function ComparisonModal({
                 pokemonList={pokemonList}
               />
             </div>
+
           </div>
 
           <button
-            className="modal-button primary full-width"
+            className="modal-btn modal-btn-primary"
+            style={{ width: '100%', marginTop: '1.5rem' }}
             onClick={handleCompare}
-            disabled={!pokemon1.trim() || !pokemon2.trim()}
+            disabled={!canCompare}
           >
-            <span>⚔️</span>
-            Comparar Pokémon
+            ⚔️ Comparar Pokémon
           </button>
         </div>
+
       </div>
     </div>
   );
 }
+
+export default ComparisonModal;
