@@ -1,0 +1,96 @@
+/**
+ * Design System - Variáveis CSS
+ * Sistema de tamanhos em REM para responsividade
+ */
+
+:root {
+  /* ===== TAMANHOS DE FONTE (REM) ===== */
+  --font-xs: 0.5rem; /* 8px */
+  --font-sm: 0.625rem; /* 10px */
+  --font-base: 0.75rem; /* 12px */
+  --font-md: 0.875rem; /* 14px */
+  --font-lg: 1rem; /* 16px */
+  --font-xl: 1.25rem; /* 20px */
+  --font-2xl: 1.5rem; /* 24px */
+
+  /* ===== ESPAÇAMENTOS (REM) ===== */
+  --space-xs: 0.25rem; /* 4px */
+  --space-sm: 0.5rem; /* 8px */
+  --space-md: 0.75rem; /* 12px */
+  --space-lg: 1rem; /* 16px */
+  --space-xl: 1.25rem; /* 20px */
+  --space-2xl: 1.5rem; /* 24px */
+
+  /* ===== CORES - POKÉDEX ===== */
+  --pokedex-red-light: #dc2626;
+  --pokedex-red-dark: #991b1b;
+  --pokedex-red-darker: #7f1d1d;
+  --pokedex-red-darkest: #b91c1c;
+
+  --pokedex-blue: #3b82f6;
+  --pokedex-blue-dark: #1e40af;
+
+  --pokedex-yellow: #fbbf24;
+  --pokedex-yellow-light: #fcd34d;
+  --pokedex-yellow-dark: #f59e0b;
+  --pokedex-yellow-border: #78350f;
+  --pokedex-yellow-shadow: #92400e;
+
+  --pokedex-gray-light: #e2e8f0;
+  --pokedex-gray: #cbd5e1;
+  --pokedex-gray-dark: #64748b;
+
+  --pokedex-bg-dark: #1e293b;
+  --pokedex-bg-darker: #0f172a;
+  --pokedex-bg-slate: #334155;
+  --pokedex-bg-slate-light: #475569;
+
+  --pokedex-text-light: #fef3c7;
+
+  /* ===== BORDAS ===== */
+  --border-sm: 2px;
+  --border-md: 3px;
+  --border-lg: 4px;
+  --border-xl: 8px;
+
+  /* ===== RADIUS ===== */
+  --radius-sm: 0.5rem; /* 8px */
+  --radius-md: 0.75rem; /* 12px */
+  --radius-full: 50%;
+
+  /* ===== SOMBRAS ===== */
+  --shadow-sm: 0 2px 0 var(--pokedex-yellow-shadow);
+  --shadow-md: 0 4px 0 var(--pokedex-yellow-shadow);
+  --shadow-lg: 0 6px 0 var(--pokedex-yellow-shadow);
+
+  --shadow-button-sm: 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-button-md: 0 6px 12px rgba(0, 0, 0, 0.3);
+  --shadow-button-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== RESPONSIVIDADE ===== */
+/* Base: 16px (padrão do navegador) */
+html {
+  font-size: 16px;
+}
+
+/* Tablet: reduzir levemente */
+@media (max-width: 1024px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Mobile: reduzir mais */
+@media (max-width: 768px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+/* Mobile pequeno: reduzir ainda mais */
+@media (max-width: 480px) {
+  html {
+    font-size: 10px;
+  }
+}

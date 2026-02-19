@@ -1,548 +1,397 @@
-/* PokedexMain.css */
+/* ===== CONTAINER PRINCIPAL COM SIDEBAR ===== */
 .pokedex-main-container {
-  min-height: 100vh;
-  height: 100vh;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   display: flex;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   overflow: hidden;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
 }
 
-/* Sidebar */
-.pokedex-sidebar {
-  width: 300px;
-  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
-  border-right: 2px solid #374151;
+.pokedex-main-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
-  height: 100vh;
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-
-.sidebar-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #374151;
-  flex-shrink: 0;
-}
-
-.sidebar-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #ef4444;
-  font-family: "Press Start 2P", cursive;
-  margin-bottom: 0.5rem;
-}
-
-.sidebar-subtitle {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-family: "Courier New", monospace;
-}
-
-/* User Profile */
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #374151;
-  border-radius: 0.75rem;
-  margin-bottom: 1.5rem;
-  flex-shrink: 0;
-}
-
-.user-avatar {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  color: white;
-  font-weight: 600;
-  font-size: 0.875rem;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 0 0 50px rgba(220, 38, 38, 0.3);
+  position: relative;
 }
 
-.user-status {
-  color: #10b981;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
+/* LED Indicador - Minimalista */
+.pokedex-main-content::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, #3b82f6 0%, #1e40af 100%);
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.8),
+    inset 0 0 10px rgba(255, 255, 255, 0.3);
+  z-index: 10;
 }
 
-/* Stats */
-.sidebar-stats {
-  background: #374151;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  flex-shrink: 0;
-}
-
-.stats-title {
-  color: #9ca3af;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-}
-
-.stat-item {
+/* ===== HEADER - LIMPO ===== */
+.pokedex-header {
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+  padding: 16px 24px 16px 72px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #4b5563;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  min-height: 64px;
 }
 
-.stat-item:last-child {
-  border-bottom: none;
+.pokedex-header h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fef3c7;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
 }
 
-.stat-label {
-  color: #d1d5db;
-  font-size: 0.875rem;
-}
-
-.stat-value {
-  color: #60a5fa;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-/* Suggestions */
-.sidebar-suggestions {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  margin-bottom: 1rem;
-  min-height: 0;
-  padding-right: 0.25rem;
-}
-
-.suggestions-title {
-  color: #9ca3af;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-}
-
-.suggestion-item {
-  background: #374151;
-  border: 1px solid #4b5563;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.875rem;
-  color: #d1d5db;
-  width: 100%;
-  text-align: left;
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-.suggestion-item:hover {
-  background: #4b5563;
-  border-color: #60a5fa;
-  transform: scale(1.02);
-}
-
-/* Sidebar Actions */
-.sidebar-actions {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 2px solid #374151;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.action-button {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
+.header-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  gap: 12px;
 }
 
-.action-button.clear {
-  background: #374151;
-  color: #d1d5db;
+.header-buttons {
+  display: flex;
+  gap: 8px;
 }
 
-.action-button.clear:hover {
-  background: #4b5563;
+.header-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border: none;
+  border-radius: 6px;
+  color: #78350f;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
 }
 
-.action-button.logout {
+.header-btn:hover {
+  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.header-btn:active {
+  transform: translateY(0);
+}
+
+.logout-btn {
+  padding: 8px 16px;
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 6px;
   color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
-.action-button.logout:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+.logout-btn:hover {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
-/* Main Chat Area */
-.pokedex-main {
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+/* ===== CHAT AREA - CLEAN ===== */
+.chat-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 100vh;
+  padding: 20px;
+  background: #1e293b;
+  margin: 16px;
+  border-radius: 12px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Header */
-.chat-header {
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  border-bottom: 2px solid #374151;
-  flex-shrink: 0;
-}
-
-.header-content {
-  text-align: center;
-}
-
-.header-title {
-  font-size: 1.75rem;
-  font-weight: bold;
-  color: #ef4444;
-  font-family: "Press Start 2P", cursive;
-  margin-bottom: 0.5rem;
-}
-
-.header-subtitle {
-  color: #9ca3af;
-  font-size: 0.875rem;
-}
-
-/* Messages Area */
 .messages-container {
   flex: 1;
   overflow-y: auto;
-  background: #111827;
-  min-height: 300px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
-.messages-wrapper {
-  width: 100%;
+.messages-container::-webkit-scrollbar {
+  width: 8px;
 }
 
-.empty-state {
+.messages-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* ===== WELCOME MESSAGE - LIMPO ===== */
+.welcome-message {
   text-align: center;
-  padding: 4rem 2rem;
+  color: #e2e8f0;
+  padding: 40px 20px;
 }
 
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+.welcome-message h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #fbbf24;
 }
 
-.empty-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #d1d5db;
-  margin-bottom: 0.5rem;
+.welcome-message p {
+  font-size: 14px;
+  margin-bottom: 20px;
+  opacity: 0.9;
+  line-height: 1.6;
 }
 
-.empty-subtitle {
-  color: #9ca3af;
-  font-size: 0.875rem;
+.welcome-message ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-/* Loading */
-.loading-container {
+.welcome-message li {
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: rgba(220, 38, 38, 0.15);
+  border-left: 3px solid #dc2626;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ===== MESSAGES - MODERNAS ===== */
+.message {
+  margin-bottom: 12px;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-message {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: #1f2937;
-  border-radius: 1rem;
-  margin-top: 1rem;
+  justify-content: flex-end;
 }
 
-.loading-avatar {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-radius: 50%;
+.user-message .message-content {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  padding: 10px 14px;
+  border-radius: 16px 16px 4px 16px;
+  max-width: 70%;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.bot-message {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.loading-dots {
+.bot-message .message-content {
+  background: #f1f5f9;
+  color: #1e293b;
+  padding: 10px 14px;
+  border-radius: 16px 16px 16px 4px;
+  max-width: 70%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ===== TYPING INDICATOR ===== */
+.typing-indicator {
   display: flex;
-  gap: 0.25rem;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  width: fit-content;
 }
 
-.loading-dot {
+.typing-indicator span {
   width: 8px;
   height: 8px;
-  background: #60a5fa;
+  background: #dc2626;
   border-radius: 50%;
-  animation: bounce 1.4s infinite ease-in-out;
+  animation: bounce 1.4s infinite;
 }
 
-.loading-dot:nth-child(1) {
-  animation-delay: -0.32s;
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
 }
 
-.loading-dot:nth-child(2) {
-  animation-delay: -0.16s;
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 @keyframes bounce {
   0%,
-  80%,
+  60%,
   100% {
-    transform: scale(0);
+    transform: translateY(0);
   }
-  40% {
-    transform: scale(1);
+  30% {
+    transform: translateY(-8px);
   }
 }
 
-/* Input Area */
-.input-container {
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  border-top: 2px solid #374151;
-  padding: 1.5rem;
-  flex-shrink: 0;
-}
-
-.input-wrapper {
+/* ===== INPUT AREA - MODERNA ===== */
+.input-area {
   display: flex;
-  gap: 1rem;
-  align-items: flex-end;
+  gap: 10px;
+  background: rgba(30, 41, 59, 0.5);
+  padding: 12px;
+  border-radius: 8px;
 }
 
-.message-input {
+.input-area input {
   flex: 1;
-  background: #374151;
-  border: 2px solid #4b5563;
-  border-radius: 1rem;
-  padding: 1rem;
-  color: white;
-  font-size: 0.875rem;
+  padding: 10px 14px;
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 14px;
   outline: none;
-  transition: all 0.2s;
-  resize: none;
-  min-height: 50px;
-  max-height: 150px;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
+  transition: all 0.3s;
 }
 
-.message-input:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+.input-area input:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
-.message-input::placeholder {
-  color: #9ca3af;
+.input-area input::placeholder {
+  color: #64748b;
 }
 
-.send-button {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  border: none;
-  border-radius: 1rem;
-  padding: 1rem 2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.send-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
-.send-button:disabled {
-  opacity: 0.5;
+.input-area input:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Scrollbar */
-.messages-container::-webkit-scrollbar,
-.sidebar-suggestions::-webkit-scrollbar,
-.pokedex-sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.messages-container::-webkit-scrollbar-track,
-.sidebar-suggestions::-webkit-scrollbar-track,
-.pokedex-sidebar::-webkit-scrollbar-track {
-  background: #1f2937;
-}
-
-.messages-container::-webkit-scrollbar-thumb,
-.sidebar-suggestions::-webkit-scrollbar-thumb,
-.pokedex-sidebar::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 4px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover,
-.sidebar-suggestions::-webkit-scrollbar-thumb:hover,
-.pokedex-sidebar::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .pokedex-sidebar {
-    display: none;
-  }
-
-  .pokedex-main {
-    width: 100%;
-  }
-}
-
-/* Action Buttons Header */
-.action-buttons-header {
-  display: flex;
-  gap: 1rem;
-  padding: 1.25rem;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  border-bottom: 2px solid #374151;
-}
-
-.action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.625rem;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-  border: 2px solid #4b5563;
-  border-radius: 0.75rem;
-  color: #d1d5db;
+.input-area button {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border: none;
+  border-radius: 8px;
+  color: #78350f;
+  font-size: 14px;
   font-weight: 600;
-  font-size: 0.9375rem;
   cursor: pointer;
   transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
 }
 
-.action-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transition: left 0.5s;
+.input-area button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
 }
 
-.action-btn:hover::before {
-  left: 100%;
+.input-area button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.action-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-  color: white;
+.input-area button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.action-btn.search-btn:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-color: #3b82f6;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
-
-.action-btn.compare-btn:hover {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  border-color: #f59e0b;
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
-}
-
-.action-btn.team-btn:hover {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-color: #ef4444;
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-}
-
-.btn-icon {
-  font-size: 1.5rem;
-  line-height: 1;
-}
-
-.btn-text {
-  font-size: 0.9375rem;
-  white-space: nowrap;
-}
-
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .action-buttons-header {
+  .pokedex-main-container {
     flex-direction: column;
-    gap: 0.75rem;
-    padding: 1rem;
   }
 
-  .action-btn {
+  .pokedex-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 12px 12px 60px;
+  }
+
+  .pokedex-header h1 {
+    font-size: 16px;
+  }
+
+  .header-actions {
+    flex-direction: column;
     width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .btn-text {
-    display: none;
+    gap: 8px;
   }
 
-  .btn-icon {
-    font-size: 1.75rem;
+  .header-buttons {
+    width: 100%;
+    justify-content: space-between;
   }
 
-  .action-btn {
-    padding: 0.875rem;
+  .header-btn,
+  .logout-btn {
+    flex: 1;
+    font-size: 12px;
+  }
+
+  .user-message .message-content,
+  .bot-message .message-content {
+    max-width: 85%;
+    font-size: 13px;
+  }
+
+  .input-area {
+    flex-direction: column;
+  }
+
+  .input-area button {
+    width: 100%;
   }
 }

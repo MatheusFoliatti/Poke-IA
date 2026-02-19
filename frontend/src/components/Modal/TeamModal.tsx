@@ -1,112 +1,137 @@
-import { useState } from 'react';
-import { TeamFilters } from '../Tabs/TeamTab';
+import React, { useState } from 'react';
 import './SearchModal.css';
+
+interface TeamFilters {
+  type?: string;
+  strategy?: string;
+}
 
 interface TeamModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerateTeam: (filters: TeamFilters) => void;
+  disabled?: boolean;
 }
 
-function TeamModal({ isOpen, onClose, onGenerateTeam }: TeamModalProps) {
+export default function TeamModal({ 
+  isOpen, 
+  onClose, 
+  onGenerateTeam,
+  disabled = false 
+}: TeamModalProps) {
   const [selectedType, setSelectedType] = useState('');
   const [selectedStrategy, setSelectedStrategy] = useState('');
 
   if (!isOpen) return null;
 
   const types = [
-    { value: '', label: 'Todos', icon: '🌈' },
-    { value: 'fire', label: 'Fogo', icon: '🔥' },
-    { value: 'water', label: 'Água', icon: '💧' },
-    { value: 'grass', label: 'Grama', icon: '🌿' },
-    { value: 'electric', label: 'Elétrico', icon: '⚡' },
-    { value: 'psychic', label: 'Psíquico', icon: '🔮' },
-    { value: 'dragon', label: 'Dragão', icon: '🐉' },
-    { value: 'ghost', label: 'Fantasma', icon: '👻' },
-    { value: 'ice', label: 'Gelo', icon: '❄️' },
-    { value: 'fighting', label: 'Lutador', icon: '🥊' },
-    { value: 'dark', label: 'Sombrio', icon: '🌑' },
-    { value: 'steel', label: 'Metálico', icon: '⚙️' },
-    { value: 'fairy', label: 'Fada', icon: '🧚' },
-    { value: 'rock', label: 'Pedra', icon: '🪨' },
-    { value: 'ground', label: 'Terra', icon: '🌍' },
-    { value: 'flying', label: 'Voador', icon: '🕊️' },
+    { name: 'Normal', icon: '⭐' },
+    { name: 'Fire', icon: '🔥' },
+    { name: 'Water', icon: '💧' },
+    { name: 'Electric', icon: '⚡' },
+    { name: 'Grass', icon: '🌿' },
+    { name: 'Ice', icon: '❄️' },
+    { name: 'Fighting', icon: '🥊' },
+    { name: 'Poison', icon: '☠️' },
+    { name: 'Ground', icon: '🏜️' },
+    { name: 'Flying', icon: '🦅' },
+    { name: 'Psychic', icon: '🔮' },
+    { name: 'Bug', icon: '🐛' },
+    { name: 'Rock', icon: '🪨' },
+    { name: 'Ghost', icon: '👻' },
+    { name: 'Dragon', icon: '🐉' },
+    { name: 'Dark', icon: '🌑' },
+    { name: 'Steel', icon: '⚙️' },
+    { name: 'Fairy', icon: '🧚' },
   ];
 
   const strategies = [
-    { value: '', label: 'Balanceada', icon: '⚖️' },
-    { value: 'offensive', label: 'Ofensiva', icon: '⚔️' },
-    { value: 'tank', label: 'Defensiva', icon: '🛡️' },
-    { value: 'speed', label: 'Velocidade', icon: '⚡' },
+    { name: 'Ofensivo', icon: '⚔️' },
+    { name: 'Defensivo', icon: '🛡️' },
+    { name: 'Balanceado', icon: '⚖️' },
+    { name: 'Velocidade', icon: '💨' },
   ];
 
   const handleGenerate = () => {
+    if (disabled) return;
+    
     const filters: TeamFilters = {};
     if (selectedType) filters.type = selectedType;
     if (selectedStrategy) filters.strategy = selectedStrategy;
+    
     onGenerateTeam(filters);
     onClose();
+    setSelectedType('');
+    setSelectedStrategy('');
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && !disabled) {
+      onClose();
+    }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-xlarge" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={handleBackdropClick}>
+      <div className="modal-container modal-xlarge">
         <div className="modal-header">
-          <span className="modal-icon">🎯</span>
-          <h2 className="modal-title">Montar Equipe</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <h2>🎯 Montar Equipe</h2>
+          <button className="modal-close" onClick={onClose} disabled={disabled}>
+            ✕
+          </button>
         </div>
         
-        <div className="modal-body modal-body-scrollable">
+        <div className="modal-content modal-body-scrollable">
           <p className="modal-description">
-            Crie uma equipe balanceada de 6 Pokémon totalmente evoluídos com base em tipo e estratégia
+            Escolha um tipo e estratégia para montar a equipe perfeita
           </p>
-          
+
           <div className="team-form-modal">
             <div className="filter-section">
-              <label className="filter-label">🌈 Tipo de Pokémon</label>
+              <label className="filter-label">Tipo Principal (Opcional)</label>
               <div className="filter-grid-modal">
-                {types.map(type => (
+                {types.map((type) => (
                   <button
-                    key={type.value}
-                    className={`filter-button-modal ${selectedType === type.value ? 'active' : ''}`}
-                    onClick={() => setSelectedType(type.value)}
+                    key={type.name}
+                    className={`filter-button-modal ${selectedType === type.name ? 'active' : ''}`}
+                    onClick={() => !disabled && setSelectedType(selectedType === type.name ? '' : type.name)}
+                    disabled={disabled}
                   >
                     <span className="filter-icon">{type.icon}</span>
-                    <span className="filter-text">{type.label}</span>
+                    <span className="filter-text">{type.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="filter-section">
-              <label className="filter-label">🎯 Estratégia de Batalha</label>
+              <label className="filter-label">Estratégia (Opcional)</label>
               <div className="filter-grid-modal">
-                {strategies.map(strategy => (
+                {strategies.map((strategy) => (
                   <button
-                    key={strategy.value}
-                    className={`filter-button-modal ${selectedStrategy === strategy.value ? 'active' : ''}`}
-                    onClick={() => setSelectedStrategy(strategy.value)}
+                    key={strategy.name}
+                    className={`filter-button-modal ${selectedStrategy === strategy.name ? 'active' : ''}`}
+                    onClick={() => !disabled && setSelectedStrategy(selectedStrategy === strategy.name ? '' : strategy.name)}
+                    disabled={disabled}
                   >
                     <span className="filter-icon">{strategy.icon}</span>
-                    <span className="filter-text">{strategy.label}</span>
+                    <span className="filter-text">{strategy.name}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          <button 
+          <button
             className="modal-button primary full-width"
             onClick={handleGenerate}
+            disabled={disabled}
           >
-            <span>🎯</span>
-            Gerar Equipe Aleatória
+            <span className="modal-button-icon">🎯</span>
+            {disabled ? 'Processando...' : 'Gerar Equipe'}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
-export default TeamModal;
