@@ -5,21 +5,26 @@ import { useConversationStore } from '../../store/conversationStore';
 import { useAuthStore } from '../../store/authStore';
 import { ConversationsSidebar } from '../Conversations';
 import { Conversation } from '../../types/conversation';
+import { Pokemon } from '../../types/pokemon';
 import PokemonCard from '../Pokemon/PokemonCard';
 import SearchModal from '../Modal/SearchModal';
 import ComparisonModal from '../Modal/ComparisonModal';
 import TeamModal from '../Modal/TeamModal';
 import { LogoutModal } from '../Modal/LogoutModal';
 import { TeamFilters } from '../Tabs/TeamTab';
+import { api } from '../../services/axiosConfig';
 import './PokedexMain.css';
 
 export const PokedexMain: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  
+
+  // ─── Lista de Pokémon para o autocomplete dos modais ───────────
+  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+
   // Controle de modais - apenas 1 aberto por vez
   const [activeModal, setActiveModal] = useState<'search' | 'comparison' | 'team' | 'logout' | null>(null);
-  
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -42,9 +47,10 @@ export const PokedexMain: React.FC = () => {
     updateConversationMessageCount,
   } = useConversationStore();
 
-  // Carregar conversas ao montar componente
+  // ─── Carregar conversas e lista de Pokémon ao montar ───────────
   useEffect(() => {
     fetchConversations();
+    fetchPokemonList(); // ← adicionado aqui
   }, [fetchConversations]);
 
   // Carregar histórico quando conversa ativa mudar
@@ -61,7 +67,18 @@ export const PokedexMain: React.FC = () => {
     }
   }, [messages]);
 
-  // Enviar mensagem via input
+  // ─── Busca a lista de Pokémon da API para o autocomplete ───────
+  const fetchPokemonList = async () => {
+    try {
+      const response = await api.get('/api/chat/pokemon-list');
+      setPokemonList(response.data.pokemon || []);
+      console.log(`✅ Carregados ${response.data.count} Pokémon para autocomplete`);
+    } catch (error) {
+      console.error('❌ Erro ao carregar lista de Pokémon:', error);
+    }
+  };
+
+  // ─── Enviar mensagem via input ──────────────────────────────────
   const handleSendMessage = async () => {
     if (inputMessage.trim() === '') return;
 
@@ -71,7 +88,7 @@ export const PokedexMain: React.FC = () => {
 
     try {
       await sendMessage(messageToSend, activeConversationId || undefined);
-      
+
       if (activeConversationId) {
         updateConversationMessageCount(activeConversationId);
       }
@@ -82,7 +99,7 @@ export const PokedexMain: React.FC = () => {
     }
   };
 
-  // Enviar mensagem diretamente (para modais)
+  // ─── Enviar mensagem via modais (buscar, comparar, equipe) ─────
   const sendMessageDirectly = async (message: string) => {
     if (!message.trim()) return;
 
@@ -90,7 +107,7 @@ export const PokedexMain: React.FC = () => {
 
     try {
       await sendMessage(message, activeConversationId || undefined);
-      
+
       if (activeConversationId) {
         updateConversationMessageCount(activeConversationId);
       }
@@ -101,11 +118,11 @@ export const PokedexMain: React.FC = () => {
     }
   };
 
-  // Handlers de conversas
+  // ─── Handlers de conversas ─────────────────────────────────────
   const handleNewConversation = async (): Promise<Conversation | null> => {
-    const timestamp = new Date().toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const timestamp = new Date().toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
     });
     return await createConversation(`Nova Conversa ${timestamp}`);
   };
@@ -122,14 +139,14 @@ export const PokedexMain: React.FC = () => {
     await deleteConversation(id);
   };
 
-  // Controle de modais
+  // ─── Controle de modais ────────────────────────────────────────
   const openSearchModal = () => setActiveModal('search');
   const openComparisonModal = () => setActiveModal('comparison');
   const openTeamModal = () => setActiveModal('team');
   const openLogoutModal = () => setActiveModal('logout');
   const closeModal = () => setActiveModal(null);
 
-  // Handlers dos modais
+  // ─── Handlers dos modais ───────────────────────────────────────
   const handleSearch = (pokemonName: string) => {
     const message = `Me fale sobre ${pokemonName}`;
     closeModal();
@@ -146,12 +163,12 @@ export const PokedexMain: React.FC = () => {
     let message = 'Monte uma equipe';
     if (filters.type) message += ` de ${filters.type}`;
     if (filters.strategy) message += ` ${filters.strategy}`;
-    
+
     closeModal();
     sendMessageDirectly(message);
   };
 
-  // Handler de logout
+  // ─── Handler de logout ─────────────────────────────────────────
   const handleLogoutConfirm = () => {
     logout();
     navigate('/login');
@@ -160,6 +177,7 @@ export const PokedexMain: React.FC = () => {
 
   return (
     <div className="pokedex-main-container">
+
       {/* SIDEBAR DE CONVERSAS */}
       <ConversationsSidebar
         conversations={conversations}
@@ -173,6 +191,7 @@ export const PokedexMain: React.FC = () => {
 
       {/* CONTEÚDO PRINCIPAL */}
       <div className="pokedex-main-content">
+
         {/* Header com botões */}
         <div className="pokedex-header">
           <h1>PokéIA - Assistente Pokémon</h1>
@@ -239,6 +258,7 @@ export const PokedexMain: React.FC = () => {
                 </div>
               ))
             )}
+
             {isTyping && (
               <div className="message bot-message">
                 <div className="typing-indicator">
@@ -265,37 +285,38 @@ export const PokedexMain: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {/* Modais - Apenas 1 aberto por vez */}
-        <SearchModal
-          isOpen={activeModal === 'search'}
-          onClose={closeModal}
-          pokemonList={[]}
-          onSearch={handleSearch}
-          disabled={isTyping}
-        />
-        
-        <ComparisonModal
-          isOpen={activeModal === 'comparison'}
-          onClose={closeModal}
-          pokemonList={[]}
-          onCompare={handleCompare}
-          disabled={isTyping}
-        />
-        
-        <TeamModal
-          isOpen={activeModal === 'team'}
-          onClose={closeModal}
-          onGenerateTeam={handleGenerateTeam}
-          disabled={isTyping}
-        />
-
-        <LogoutModal
-          isOpen={activeModal === 'logout'}
-          onClose={closeModal}
-          onConfirm={handleLogoutConfirm}
-        />
       </div>
+
+      {/* ─── MODAIS ──────────────────────────────────────────────── */}
+
+      {/* Buscar Pokémon — recebe pokemonList para o PokemonAutocomplete */}
+      <SearchModal
+        isOpen={activeModal === 'search'}
+        onClose={closeModal}
+        pokemonList={pokemonList}
+        onSearch={handleSearch}
+      />
+
+      {/* Comparar Pokémon — recebe pokemonList para o PokemonAutocomplete */}
+      <ComparisonModal
+        isOpen={activeModal === 'comparison'}
+        onClose={closeModal}
+        pokemonList={pokemonList}
+        onCompare={handleCompare}
+      />
+
+      <TeamModal
+        isOpen={activeModal === 'team'}
+        onClose={closeModal}
+        onGenerateTeam={handleGenerateTeam}
+      />
+
+      <LogoutModal
+        isOpen={activeModal === 'logout'}
+        onClose={closeModal}
+        onConfirm={handleLogoutConfirm}
+      />
+
     </div>
   );
 };

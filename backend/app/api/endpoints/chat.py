@@ -239,17 +239,34 @@ async def clear_history(
 
 @router.get("/pokemon-list")
 async def get_pokemon_list():
-    """
-    Retorna lista de Pokémon para autocomplete
+    """Retorna lista de Pokémon com sprites para o autocomplete (incluindo Mega Evolutions)"""
+    from app.services.chat_service import POKEMON_NAMES_CACHE, load_pokemon_names_cache
 
-    Returns:
-        Lista de Pokémon com nomes e sprites
-    """
-    from app.services.pokeapi import get_all_pokemon_names
+    if not POKEMON_NAMES_CACHE:
+        await load_pokemon_names_cache()
 
-    pokemon_list = await get_all_pokemon_names()
+    pokemon_with_sprites = []
 
-    return {
-        "pokemon": pokemon_list,
-        "count": len(pokemon_list),
-    }
+    print(f"🔍 [API] Processando {len(POKEMON_NAMES_CACHE)} Pokémon do cache...")
+
+    for idx, name in enumerate(POKEMON_NAMES_CACHE, start=1):
+        # IDs 1-1025 são Pokémon normais
+        # A partir de 1026 são formas alternativas (IDs reais começam em 10001)
+        if idx <= 1025:
+            pokemon_id = idx
+        else:
+            pokemon_id = 10000 + (idx - 1025)
+
+        pokemon_with_sprites.append(
+            {
+                "name": name,
+                "sprite": f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{pokemon_id}.png",
+            }
+        )
+
+    mega_count = sum(1 for p in pokemon_with_sprites if "-mega" in p["name"])
+    print(
+        f"✅ [API] Retornando {len(pokemon_with_sprites)} Pokémon ({mega_count} Megas)"
+    )
+
+    return {"pokemon": pokemon_with_sprites, "count": len(pokemon_with_sprites)}
