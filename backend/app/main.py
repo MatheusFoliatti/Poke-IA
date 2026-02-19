@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.api.endpoints import auth, chat
+from app.api.endpoints import auth, chat, conversations
 from app.services.chat_service import load_pokemon_names_cache
 
 
@@ -33,10 +33,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir rotas
+# Registrar routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
-
+app.include_router(conversations.router, prefix="/api/conversations", tags=["conversations"])  
 
 @app.get("/")
 async def root():

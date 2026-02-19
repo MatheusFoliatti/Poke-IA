@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
-import PokedexMain from './components/Pokedex/PokedexMain';
+import { PokedexMain } from './components/Pokedex/PokedexMain';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();

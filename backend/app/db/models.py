@@ -1,76 +1,88 @@
-# backend/app/db/models.py
+"""
+Modelos do banco de dados
+"""
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Text,
+    JSON,
+)
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.database import Base
 
 
 class User(Base):
-    """Modelo de usuário."""
+    """
+    Modelo de Usuário
+    """
+
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=True)
+    hashed_password = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
     # Relacionamentos
-    chat_messages = relationship(  # ← ALTERADO
-        "ChatMessage",  # ← ALTERADO
-        back_populates="user",
-        cascade="all, delete-orphan"
+    conversations = relationship(
+        "Conversation", back_populates="user", cascade="all, delete-orphan"
     )
-    favorite_pokemon = relationship(
-        "FavoritePokemon",
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
-    search_history = relationship(
-        "SearchHistory",
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
+    messages = relationship("ChatMessage", back_populates="user")
 
 
-class ChatMessage(Base):  # ← ALTERADO de Conversation para ChatMessage
-    """Modelo de mensagem do chat."""
+class Conversation(Base):
+    """
+    Modelo de Conversa
+    """
+
+    __tablename__ = "conversations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title = Column(String(255), nullable=False, default="Nova Conversa")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relacionamentos
+    user = relationship("User", back_populates="conversations")
+    messages = relationship(
+        "ChatMessage", back_populates="conversation", cascade="all, delete-orphan"
+    )
+
+    @property
+    def message_count(self):
+        """Retorna o número de mensagens na conversa"""
+        return len(self.messages)
+
+
+class ChatMessage(Base):
+    """
+    Modelo de Mensagem de Chat
+    """
+
     __tablename__ = "chat_messages"
-    
+
     id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(
+        Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False
+    )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    content = Column(Text, nullable=False)  # ← Mantido
-    is_bot = Column(Boolean, default=False)  # ← ADICIONADO
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relacionamento
-    user = relationship("User", back_populates="chat_messages")  # ← ALTERADO
+    content = Column(Text, nullable=False)
+    is_bot = Column(Boolean, default=False, nullable=False)
+    pokemon_data = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-
-class FavoritePokemon(Base):
-    """Modelo de Pokémon favoritos do usuário."""
-    __tablename__ = "favorite_pokemon"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    pokemon_id = Column(Integer, nullable=False)
-    pokemon_name = Column(String, nullable=False)
-    added_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relacionamento
-    user = relationship("User", back_populates="favorite_pokemon")
-
-
-class SearchHistory(Base):
-    """Modelo de histórico de buscas de Pokémon."""
-    __tablename__ = "pokemon_searches"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    pokemon_name = Column(String, nullable=False)
-    searched_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relacionamento
-    user = relationship("User", back_populates="search_history")
+    # Relacionamentos
+    user = relationship("User", back_populates="messages")
+    conversation = relationship("Conversation", back_populates="messages")

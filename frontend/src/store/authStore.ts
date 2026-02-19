@@ -14,7 +14,7 @@ interface AuthState {
   login: (username: string, password: string) => Promise<boolean>;
   register: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  updateToken: (token: string) => void;  // ← ADICIONAR
+  updateToken: (token: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -52,12 +52,17 @@ export const useAuthStore = create<AuthState>()(
             token: response.data.access_token,
           };
 
+          // Salvar no localStorage para o api.ts
+          localStorage.setItem('token', response.data.access_token);
+          localStorage.setItem('token_type', response.data.token_type || 'bearer');
+
           set({
             user: userData,
             isAuthenticated: true,
           });
 
           console.log('✅ Login realizado com sucesso:', userData);
+          console.log('✅ Token salvo no localStorage');
           return true;
         } catch (error: any) {
           console.error('❌ Erro no login:', error);
@@ -88,6 +93,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        // Limpar localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('token_type');
+        
         set({
           user: null,
           isAuthenticated: false,
@@ -98,13 +107,16 @@ export const useAuthStore = create<AuthState>()(
       updateToken: (token: string) => {
         const currentUser = get().user;
         if (currentUser) {
+          // Atualizar localStorage também
+          localStorage.setItem('token', token);
+          
           set({
             user: {
               ...currentUser,
               token: token,
             },
           });
-          console.log('✅ Token atualizado no store');
+          console.log('✅ Token atualizado no store e localStorage');
         }
       },
     }),

@@ -20,6 +20,21 @@ interface PokemonCardProps {
 }
 
 export default function PokemonCard({ pokemon }: PokemonCardProps) {
+  // Validação crítica
+  if (!pokemon) {
+    console.error('🎴 [CARD] Pokemon é null/undefined');
+    return null;
+  }
+
+  if (!pokemon.stats) {
+    console.error('🎴 [CARD] Pokemon.stats é null/undefined:', pokemon);
+    return (
+      <div className="pokemon-card error">
+        <p>Erro ao carregar dados do Pokémon</p>
+      </div>
+    );
+  }
+
   const totalStats = Object.values(pokemon.stats).reduce((a, b) => a + b, 0);
   const maxStat = 255;
   
@@ -59,9 +74,12 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
         <div className="pokemon-image-container">
           <div className="pokemon-image-wrapper">
             <img
-              src={pokemon.sprites.front_default || '/placeholder.png'}
+              src={pokemon.sprites?.front_default || '/placeholder.png'}
               alt={pokemon.name}
               className="pokemon-image"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder.png';
+              }}
             />
           </div>
           <div className="pokemon-number">
