@@ -13,7 +13,7 @@
 [![Llama](https://img.shields.io/badge/LLM-Llama_3-FF6B6B.svg)](https://ollama.ai/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)](https://www.postgresql.org/)
 
-[🚀 Demo](#-screenshots) • [📖 Documentação](#-índice) • [💻 Instalação](#-instalação) 
+[🚀 Demo](#-screenshots) • [📖 Documentação](#-índice) • [💻 Instalação](#-instalação) • [🤝 Contribuir](#-contribuindo)
 
 </div>
 
@@ -48,11 +48,12 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 - 🎯 **Montar equipes competitivas** com filtros avançados
 - 🤖 **Conversar com IA** especializada em Pokémon
 - 📊 **Analisar stats, tipos e estratégias** de batalha
-- 💾 **Manter histórico** de conversas personalizado
+- 💬 **Gerenciar múltiplas conversas** com histórico independente por conversa
 
 ### 🎨 Experiência Visual Única
 
 - **Animação de abertura da Pokédex** após login
+- **Sidebar de conversas** com navegação entre múltiplos chats
 - **Interface com sistema de abas** (Buscar, Comparar, Montar Equipe)
 - **Autocomplete com sprites** dos Pokémon em tempo real
 - **Modais personalizados** para ações críticas
@@ -69,6 +70,17 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 - ✅ Sessões persistentes com Zustand
 - ✅ Renovação automática de tokens expirados
 - ✅ Logout com confirmação em modal
+
+### 💬 Sistema de Conversas Múltiplas _(novo em v2.1.0)_
+
+- ✅ **Sidebar de conversas** com listagem completa
+- ✅ **Criar nova conversa** com nome automático por timestamp
+- ✅ **Renomear conversa** via modal dedicado
+- ✅ **Deletar conversa** com confirmação e contagem de mensagens
+- ✅ **Prevenção de conversa vazia duplicada** com highlight + toast de aviso
+- ✅ **Histórico isolado por conversa** — cada chat tem seu próprio contexto
+- ✅ **Migração automática** do histórico existente para o novo modelo
+- ✅ **Estado de carregamento e empty state** na sidebar
 
 ### 🔍 Busca Inteligente de Pokémon
 
@@ -108,7 +120,7 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 - ✅ Respostas contextuais sobre Pokémon
 - ✅ Sugestões de perguntas rápidas
 - ✅ Análise de fraquezas e resistências
-- ✅ Histórico de conversas por usuário
+- ✅ Histórico isolado por conversa
 - ✅ Fallback inteligente quando IA offline
 
 ### 📊 Dashboard e Estatísticas
@@ -121,6 +133,7 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 
 ### 🎨 Interface Moderna
 
+- ✅ **Sidebar de conversas** com scroll, ações e toast feedback
 - ✅ **Sistema de abas** (Buscar, Comparar, Equipe)
 - ✅ **Modais personalizados** (danger, warning, info)
 - ✅ **Animações suaves** (fade, slide, scale)
@@ -138,13 +151,13 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 - **FastAPI 0.104+** - Framework web assíncrono
 - **SQLAlchemy 2.0+** - ORM para banco de dados
 - **PostgreSQL 15+** - Banco de dados relacional
+- **Alembic 1.12+** - Migrações de banco
 - **Ollama/Llama 3.2** - Modelo de linguagem local
 - **JWT (PyJWT)** - Autenticação segura
 - **HTTPX 0.25+** - Cliente HTTP assíncrono
 - **Bcrypt 4.0+** - Hash de senhas
 - **Uvicorn 0.24+** - Servidor ASGI
 - **Pydantic 2.0+** - Validação de dados
-- **Alembic 1.12+** - Migrações de banco
 
 ### Frontend
 
@@ -206,6 +219,24 @@ For each Pokemon:
 Generate 6 Pokemon team with analysis
     ↓
 Return to Frontend with 6 cards
+```
+
+#### Sistema de Conversas Múltiplas _(v2.1.0)_
+
+```
+User clicks "Nova Conversa"
+    ↓
+ConversationsSidebar → onNewConversation()
+    ↓
+Check: already has empty conversation?
+    ├── YES → Highlight existing + show toast
+    └── NO  → POST /api/conversations { title }
+                ↓
+           New conversation created
+                ↓
+           setActiveConversation(id)
+                ↓
+           Load messages for this conversation
 ```
 
 #### JWT Refresh Automático
@@ -334,6 +365,8 @@ cd backend
 alembic upgrade head
 ```
 
+> ⚠️ A migração `5c40fd2edc57` cria a tabela `conversations` e migra automaticamente o histórico existente de cada usuário para uma "Conversa Principal".
+
 ---
 
 ## 🎮 Executando o Projeto
@@ -381,7 +414,8 @@ Poke-IA/
 │   ├── app/
 │   │   ├── api/endpoints/
 │   │   │   ├── auth.py
-│   │   │   └── chat.py
+│   │   │   ├── chat.py
+│   │   │   └── conversations.py       ← novo v2.1.0
 │   │   ├── core/
 │   │   │   ├── config.py
 │   │   │   ├── security.py
@@ -389,11 +423,17 @@ Poke-IA/
 │   │   ├── db/
 │   │   │   ├── models.py
 │   │   │   └── database.py
+│   │   ├── schemas/
+│   │   │   └── conversation.py        ← novo v2.1.0
 │   │   ├── services/
 │   │   │   ├── pokeapi.py
-│   │   │   └── chat_service.py
+│   │   │   ├── chat_service.py
+│   │   │   └── conversation_service.py ← novo v2.1.0
 │   │   └── main.py
 │   ├── alembic/
+│   │   └── versions/
+│   │       ├── 0eecc261f479_baseline.py
+│   │       └── 5c40fd2edc57_add_conversations_table.py ← novo v2.1.0
 │   ├── requirements.txt
 │   └── .env
 ├── frontend/
@@ -402,12 +442,23 @@ Poke-IA/
 │   │   │   ├── Auth/
 │   │   │   ├── Pokedex/
 │   │   │   ├── Chat/
+│   │   │   ├── Conversations/         ← novo v2.1.0
+│   │   │   │   ├── ConversationsSidebar.tsx
+│   │   │   │   ├── ConversationItem.tsx
+│   │   │   │   ├── RenameConversationModal.tsx
+│   │   │   │   ├── DeleteConversationModal.tsx
+│   │   │   │   ├── Conversations.css
+│   │   │   │   └── index.ts
 │   │   │   ├── Tabs/
 │   │   │   ├── Autocomplete/
 │   │   │   └── Modal/
 │   │   ├── services/
 │   │   ├── store/
+│   │   │   ├── authStore.ts
+│   │   │   ├── chatStore.ts
+│   │   │   └── conversationStore.ts   ← novo v2.1.0
 │   │   ├── types/
+│   │   │   └── conversation.ts        ← novo v2.1.0
 │   │   └── App.tsx
 │   ├── package.json
 │   └── .env
@@ -436,6 +487,16 @@ Poke-IA/
 | GET    | /api/chat/history      | Privado | Obter histórico         |
 | DELETE | /api/chat/history      | Privado | Limpar histórico        |
 | GET    | /api/chat/pokemon-list | Público | Lista para autocomplete |
+
+### Conversas _(novo v2.1.0)_
+
+| Método | Endpoint                              | Auth    | Descrição                      |
+| ------ | ------------------------------------- | ------- | ------------------------------ |
+| GET    | /api/conversations/                   | Privado | Listar conversas do usuário    |
+| POST   | /api/conversations/                   | Privado | Criar nova conversa            |
+| PATCH  | /api/conversations/{id}               | Privado | Renomear conversa              |
+| DELETE | /api/conversations/{id}               | Privado | Deletar conversa e mensagens   |
+| GET    | /api/conversations/{id}/messages      | Privado | Buscar mensagens da conversa   |
 
 ---
 
@@ -466,7 +527,7 @@ Poke-IA/
 
 ## 🗺 Roadmap
 
-### ✅ v2.0 - Atual
+### ✅ v2.0 - Concluído
 
 - [x] Sistema de autenticação JWT
 - [x] Refresh token automático
@@ -479,13 +540,22 @@ Poke-IA/
 - [x] Modais personalizados
 - [x] Design responsivo
 
-### 🚧 v2.1 - Próxima
+### ✅ v2.1 - Concluído
+
+- [x] Sistema de conversas múltiplas
+- [x] Sidebar de navegação entre conversas
+- [x] Criar, renomear e deletar conversas
+- [x] Histórico isolado por conversa
+- [x] Migração automática do histórico existente
+- [x] Migration Alembic com upgrade/downgrade
+
+### 🚧 v2.2 - Próxima
 
 - [ ] Testes unitários
 - [ ] CI/CD com GitHub Actions
-- [ ] Documentação Swagger
-- [ ] Sistema de favoritos
-- [ ] Modo escuro
+- [ ] Toast global unificado
+- [ ] Animações (PokedexAnimation, PokeballLoader)
+- [ ] Debounce no autocomplete
 
 ### 🎯 v3.0 - Futuro
 
@@ -494,6 +564,34 @@ Poke-IA/
 - [ ] Simulador de batalhas
 - [ ] Sistema de amigos
 - [ ] PWA offline-first
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são muito bem-vindas!
+
+1. Fork o projeto
+2. Crie uma branch: `git checkout -b feature/MinhaFeature`
+3. Commit: `git commit -m 'feat: Nova feature'`
+4. Push: `git push origin feature/MinhaFeature`
+5. Abra um Pull Request
+
+### Padrões de Commit
+
+- `feat:` Nova funcionalidade
+- `fix:` Correção de bug
+- `docs:` Documentação
+- `style:` Formatação
+- `refactor:` Refatoração
+- `test:` Testes
+- `chore:` Tarefas de manutenção
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT.
 
 ---
 
