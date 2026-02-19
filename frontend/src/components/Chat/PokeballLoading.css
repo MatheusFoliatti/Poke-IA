@@ -1,0 +1,173 @@
+.pokeball-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Pokébola */
+.pokeball {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 3px solid #1f2937;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Metade de cima — vermelha por padrão */
+.pokeball-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #ef4444;
+  transition: background 0.4s ease;
+}
+
+/* Metade de baixo — branca */
+.pokeball-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #f9fafb;
+  transition: background 0.4s ease;
+}
+
+/* Faixa central */
+.pokeball-middle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 4px;
+  background: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* Botão central */
+.pokeball-button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f9fafb;
+  border: 2px solid #1f2937;
+  transition: background 0.4s ease;
+}
+
+/* Label */
+.pokeball-label {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* === ESTADOS === */
+
+/* Loading — gira */
+.pokeball-wrapper.loading .pokeball {
+  animation: pokeball-spin 0.8s linear infinite;
+}
+
+@keyframes pokeball-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading — abre e fecha */
+.pokeball-wrapper.loading .pokeball-top {
+  animation: pokeball-open 0.8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes pokeball-open {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(20deg);
+  }
+}
+
+/* Success — verde */
+.pokeball-wrapper.success .pokeball {
+  animation: pokeball-success-bounce 0.5s ease;
+}
+
+.pokeball-wrapper.success .pokeball-top {
+  background: #22c55e;
+}
+
+.pokeball-wrapper.success .pokeball-button {
+  background: #bbf7d0;
+}
+
+.pokeball-wrapper.success .pokeball-label {
+  color: #22c55e;
+}
+
+@keyframes pokeball-success-bounce {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Error — vermelho pulsando */
+.pokeball-wrapper.error .pokeball {
+  animation: pokeball-error-shake 0.4s ease;
+}
+
+.pokeball-wrapper.error .pokeball-top {
+  background: #ef4444;
+}
+
+.pokeball-wrapper.error .pokeball-button {
+  background: #fecaca;
+}
+
+.pokeball-wrapper.error .pokeball-label {
+  color: #ef4444;
+}
+
+@keyframes pokeball-error-shake {
+  0% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
