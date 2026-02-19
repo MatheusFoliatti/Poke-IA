@@ -1,74 +1,22 @@
 import React, { useState } from 'react';
+import { Pokemon } from '../../types/pokemon';
+import PokemonAutocomplete from '../Autocomplete/PokemonAutocomplete';
 import './SearchModal.css';
 
 interface ComparisonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pokemonList: string[];
+  pokemonList: Pokemon[];
   onCompare: (pokemon1: string, pokemon2: string) => void;
-  disabled?: boolean;
 }
 
-export default function ComparisonModal({ 
-  isOpen, 
-  onClose, 
-  pokemonList, 
-  onCompare,
-  disabled = false 
-}: ComparisonModalProps) {
+function ComparisonModal({ isOpen, onClose, pokemonList, onCompare }: ComparisonModalProps) {
   const [pokemon1, setPokemon1] = useState('');
   const [pokemon2, setPokemon2] = useState('');
-  const [suggestions1, setSuggestions1] = useState<string[]>([]);
-  const [suggestions2, setSuggestions2] = useState<string[]>([]);
-  const [showSuggestions1, setShowSuggestions1] = useState(false);
-  const [showSuggestions2, setShowSuggestions2] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSearch1 = (value: string) => {
-    setPokemon1(value);
-    
-    if (value.trim() === '') {
-      setSuggestions1([]);
-      return;
-    }
-
-    const filtered = pokemonList
-      .filter(pokemon => pokemon.toLowerCase().includes(value.toLowerCase()))
-      .slice(0, 10);
-    
-    setSuggestions1(filtered);
-    setShowSuggestions1(true);
-  };
-
-  const handleSearch2 = (value: string) => {
-    setPokemon2(value);
-    
-    if (value.trim() === '') {
-      setSuggestions2([]);
-      return;
-    }
-
-    const filtered = pokemonList
-      .filter(pokemon => pokemon.toLowerCase().includes(value.toLowerCase()))
-      .slice(0, 10);
-    
-    setSuggestions2(filtered);
-    setShowSuggestions2(true);
-  };
-
-  const handleSelect1 = (pokemon: string) => {
-    setPokemon1(pokemon);
-    setShowSuggestions1(false);
-  };
-
-  const handleSelect2 = (pokemon: string) => {
-    setPokemon2(pokemon);
-    setShowSuggestions2(false);
-  };
-
   const handleCompare = () => {
-    if (disabled) return;
     if (pokemon1.trim() && pokemon2.trim()) {
       onCompare(pokemon1.trim(), pokemon2.trim());
       onClose();
@@ -78,55 +26,37 @@ export default function ComparisonModal({
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !disabled) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
+
+  const canCompare = pokemon1.trim() && pokemon2.trim();
 
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-container modal-large">
+
         <div className="modal-header">
           <h2>⚔️ Comparar Pokémon</h2>
-          <button className="modal-close" onClick={onClose} disabled={disabled}>
-            ✕
-          </button>
+          <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        
-        <div className="modal-content">
+
+        {/* overflow: visible permite os dropdowns do autocomplete aparecerem fora do container */}
+        <div className="modal-content" style={{ overflow: 'visible' }}>
           <p className="modal-description">
-            Escolha dois Pokémon para comparar seus stats, tipos e habilidades
+            Escolha dois Pokémon para comparar suas stats e descobrir qual é mais forte
           </p>
 
-          <div className="comparison-form-modal">
+          <div className="comparison-form-modal" style={{ overflow: 'visible' }}>
+
             <div className="comparison-input-group">
-              <label className="input-label">Pokémon 1</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  value={pokemon1}
-                  onChange={(e) => handleSearch1(e.target.value)}
-                  onFocus={() => setShowSuggestions1(true)}
-                  placeholder="Ex: Charizard"
-                  className="comparison-input"
-                  disabled={disabled}
-                />
-                {showSuggestions1 && suggestions1.length > 0 && (
-                  <div className="search-suggestions" style={{ position: 'absolute', top: '100%', width: '100%', zIndex: 10, marginTop: '4px' }}>
-                    {suggestions1.map((pokemon, index) => (
-                      <div
-                        key={index}
-                        className="suggestion-item"
-                        onClick={() => !disabled && handleSelect1(pokemon)}
-                        style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
-                      >
-                        <span className="suggestion-icon">⚡</span>
-                        <span style={{ textTransform: 'capitalize' }}>{pokemon}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <label className="input-label">Primeiro Pokémon</label>
+              <PokemonAutocomplete
+                value={pokemon1}
+                onChange={setPokemon1}
+                onSelect={setPokemon1}
+                placeholder="Ex: Charizard"
+                pokemonList={pokemonList}
+              />
             </div>
 
             <div className="vs-divider-modal">
@@ -134,46 +64,31 @@ export default function ComparisonModal({
             </div>
 
             <div className="comparison-input-group">
-              <label className="input-label">Pokémon 2</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  value={pokemon2}
-                  onChange={(e) => handleSearch2(e.target.value)}
-                  onFocus={() => setShowSuggestions2(true)}
-                  placeholder="Ex: Blastoise"
-                  className="comparison-input"
-                  disabled={disabled}
-                />
-                {showSuggestions2 && suggestions2.length > 0 && (
-                  <div className="search-suggestions" style={{ position: 'absolute', top: '100%', width: '100%', zIndex: 10, marginTop: '4px' }}>
-                    {suggestions2.map((pokemon, index) => (
-                      <div
-                        key={index}
-                        className="suggestion-item"
-                        onClick={() => !disabled && handleSelect2(pokemon)}
-                        style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
-                      >
-                        <span className="suggestion-icon">⚡</span>
-                        <span style={{ textTransform: 'capitalize' }}>{pokemon}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <label className="input-label">Segundo Pokémon</label>
+              <PokemonAutocomplete
+                value={pokemon2}
+                onChange={setPokemon2}
+                onSelect={setPokemon2}
+                placeholder="Ex: Blastoise"
+                pokemonList={pokemonList}
+              />
             </div>
+
           </div>
 
           <button
-            className="modal-button primary full-width"
+            className="modal-btn modal-btn-primary"
+            style={{ width: '100%', marginTop: '1.5rem' }}
             onClick={handleCompare}
-            disabled={!pokemon1.trim() || !pokemon2.trim() || disabled}
+            disabled={!canCompare}
           >
-            <span className="modal-button-icon">⚔️</span>
-            {disabled ? 'Processando...' : 'Comparar Pokémon'}
+            ⚔️ Comparar Pokémon
           </button>
         </div>
+
       </div>
     </div>
   );
 }
+
+export default ComparisonModal;

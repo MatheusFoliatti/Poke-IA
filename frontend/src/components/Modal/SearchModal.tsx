@@ -1,122 +1,74 @@
 import React, { useState } from 'react';
+import { Pokemon } from '../../types/pokemon';
+import PokemonAutocomplete from '../Autocomplete/PokemonAutocomplete';
 import './SearchModal.css';
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pokemonList: string[];
-  onSearch: (pokemonName: string) => void;
-  disabled?: boolean;
+  pokemonList: Pokemon[];
+  onSearch: (pokemon: string) => void;
 }
 
-export default function SearchModal({ 
-  isOpen, 
-  onClose, 
-  pokemonList, 
-  onSearch,
-  disabled = false 
-}: SearchModalProps) {
+function SearchModal({ isOpen, onClose, pokemonList, onSearch }: SearchModalProps) {
   const [searchValue, setSearchValue] = useState('');
-  const [filteredPokemon, setFilteredPokemon] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
-  const handleSearch = (value: string) => {
-    setSearchValue(value);
-    
-    if (value.trim() === '') {
-      setFilteredPokemon([]);
-      return;
+  const handleSearch = () => {
+    if (searchValue.trim()) {
+      onSearch(searchValue.trim());
+      onClose();
+      setSearchValue('');
     }
-
-    const filtered = pokemonList
-      .filter(pokemon => 
-        pokemon.toLowerCase().includes(value.toLowerCase())
-      )
-      .slice(0, 50);
-
-    setFilteredPokemon(filtered);
   };
 
-  const handleSelectPokemon = (pokemon: string) => {
-    if (disabled) return;
+  const handleSelect = (pokemon: string) => {
     onSearch(pokemon);
     onClose();
     setSearchValue('');
-    setFilteredPokemon([]);
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !disabled) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
 
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-container modal-large">
+
         <div className="modal-header">
           <h2>🔍 Buscar Pokémon</h2>
-          <button className="modal-close" onClick={onClose} disabled={disabled}>
-            ✕
-          </button>
+          <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        
-        <div className="modal-content">
+
+        {/* overflow: visible permite o dropdown do autocomplete aparecer fora do container */}
+        <div className="modal-content" style={{ overflow: 'visible' }}>
           <p className="modal-description">
-            Digite o nome do Pokémon que você deseja conhecer
+            Digite o nome de qualquer Pokémon para ver suas informações completas
           </p>
 
-          <div className="search-form-modal">
-            <div className="search-input-group">
-              <input
-                type="text"
-                value={searchValue}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Ex: Pikachu, Charizard, Mewtwo..."
-                className="search-input"
-                autoFocus
-                disabled={disabled}
-              />
-              <span className="search-icon">🔍</span>
-            </div>
-
-            {searchValue && (
-              <div className="search-suggestions">
-                {filteredPokemon.length > 0 ? (
-                  filteredPokemon.map((pokemon, index) => (
-                    <div
-                      key={index}
-                      className={`suggestion-item ${disabled ? 'disabled' : ''}`}
-                      onClick={() => handleSelectPokemon(pokemon)}
-                      style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
-                    >
-                      <span className="suggestion-icon">⚡</span>
-                      <span style={{ textTransform: 'capitalize' }}>{pokemon}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="search-no-results">
-                    <div className="search-no-results-icon">😕</div>
-                    <div className="search-no-results-text">
-                      Nenhum Pokémon encontrado com "{searchValue}"
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!searchValue && (
-              <div className="search-no-results">
-                <div className="search-no-results-icon">🔎</div>
-                <div className="search-no-results-text">
-                  Comece digitando o nome de um Pokémon
-                </div>
-              </div>
-            )}
+          <div className="search-form-modal" style={{ overflow: 'visible' }}>
+            <PokemonAutocomplete
+              value={searchValue}
+              onChange={setSearchValue}
+              onSelect={handleSelect}
+              placeholder="Ex: pikachu, charizard, rayquaza..."
+              pokemonList={pokemonList}
+            />
+            <button
+              className="modal-btn modal-btn-primary"
+              onClick={handleSearch}
+              disabled={!searchValue.trim()}
+            >
+              🔍 Buscar Pokémon
+            </button>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
+
+export default SearchModal;
