@@ -522,6 +522,7 @@ Poke-IA/
 ### Interface de Montagem de Equipe
 
 ![Visual](assets/MontarEquipe.png)
+![Visual](assets/MontarEquipeChat.png)
 
 ### Interface de Comparação de Pokemon
 

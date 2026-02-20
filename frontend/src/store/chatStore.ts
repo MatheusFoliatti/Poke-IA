@@ -1,11 +1,10 @@
 /**
  * Zustand Store para Chat
- * 
- * Gerencia mensagens e interação com API de chat
  */
 
 import { create } from 'zustand';
 import api from '../services/api';
+import { useConversationStore } from './conversationStore';
 
 interface Message {
   id: number;
@@ -18,34 +17,45 @@ interface Message {
 interface ChatState {
   messages: Message[];
   isLoading: boolean;
-  
   sendMessage: (message: string, conversationId?: number) => Promise<void>;
   loadHistory: (conversationId?: number) => Promise<void>;
   clearHistory: (conversationId?: number) => Promise<void>;
   clearMessages: () => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isLoading: false,
 
   sendMessage: async (message: string, conversationId?: number) => {
     try {
-      console.log(`💬 [CHAT] Enviando: "${message}" (conversa: ${conversationId || 'padrão'})`);
-      
-      const payload: any = { message };
-      if (conversationId) {
-        payload.conversation_id = conversationId;
-      }
+      console.log(`💬 [CHAT] Enviando: "${message}"`);
 
-      const response = await api.post('/api/chat/message', payload);
-      
-      // Adicionar mensagens ao estado
-      const { user_message, bot_response } = response.data;
-      
+      // ✅ Adiciona mensagem do usuário IMEDIATAMENTE na tela
+      const tempId = Date.now();
       set((state) => ({
         messages: [
           ...state.messages,
+          {
+            id: tempId,
+            content: message,
+            is_bot: false,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      }));
+
+      const payload: any = { message };
+      if (conversationId) payload.conversation_id = conversationId;
+
+      // Aguarda resposta da API
+      const response = await api.post('/api/chat/message', payload);
+      const { user_message, bot_response, conversation_title } = response.data;
+
+      // Substitui mensagem temporária pela real + adiciona bot
+      set((state) => ({
+        messages: [
+          ...state.messages.filter((m) => m.id !== tempId),
           {
             id: user_message.id,
             content: user_message.content,
@@ -62,8 +72,24 @@ export const useChatStore = create<ChatState>((set) => ({
         ],
       }));
 
+      // Atualiza título na sidebar se gerado automaticamente
+      if (conversation_title) {
+        const convId = conversationId ?? response.data.conversation_id;
+        if (convId) {
+          useConversationStore.getState().updateConversationTitle(convId, conversation_title);
+          console.log(`✏️ [CHAT] Título atualizado: "${conversation_title}"`);
+        }
+      }
+
       console.log('✅ [CHAT] Mensagem enviada');
     } catch (error: any) {
+      // Remove mensagem temporária em caso de erro
+      const tempId = get().messages[get().messages.length - 1]?.id;
+      if (tempId) {
+        set((state) => ({
+          messages: state.messages.filter((m) => m.id !== tempId),
+        }));
+      }
       console.error('❌ [CHAT] Erro ao enviar mensagem:', error);
       throw error;
     }
@@ -71,21 +97,15 @@ export const useChatStore = create<ChatState>((set) => ({
 
   loadHistory: async (conversationId?: number) => {
     set({ isLoading: true });
-    
     try {
-      const url = conversationId 
+      const url = conversationId
         ? `/api/chat/history?conversation_id=${conversationId}`
         : '/api/chat/history';
-      
-      console.log(`📜 [CHAT] Carregando histórico (conversa: ${conversationId || 'padrão'})`);
-      
-      const response = await api.get(url);
-      
-      set({ 
-        messages: response.data.messages,
-        isLoading: false 
-      });
 
+      console.log(`📜 [CHAT] Carregando histórico (conversa: ${conversationId || 'padrão'})`);
+      const response = await api.get(url);
+
+      set({ messages: response.data.messages, isLoading: false });
       console.log(`✅ [CHAT] ${response.data.messages.length} mensagens carregadas`);
     } catch (error: any) {
       console.error('❌ [CHAT] Erro ao carregar histórico:', error);
@@ -98,20 +118,13 @@ export const useChatStore = create<ChatState>((set) => ({
       const url = conversationId
         ? `/api/chat/history?conversation_id=${conversationId}`
         : '/api/chat/history';
-
-      console.log(`🗑️ [CHAT] Limpando histórico (conversa: ${conversationId || 'padrão'})`);
-      
       await api.delete(url);
-      
       set({ messages: [] });
-      
       console.log('✅ [CHAT] Histórico limpo');
     } catch (error: any) {
       console.error('❌ [CHAT] Erro ao limpar histórico:', error);
     }
   },
 
-  clearMessages: () => {
-    set({ messages: [] });
-  },
+  clearMessages: () => set({ messages: [] }),
 }));

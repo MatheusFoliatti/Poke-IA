@@ -1,0 +1,95 @@
+.loading-conv-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  backdrop-filter: blur(4px);
+}
+
+.loading-conv-box {
+  background: #1f2937;
+  border: 2px solid #374151;
+  border-radius: 1rem;
+  padding: 2.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* Pokébola */
+.loading-conv-pokeball {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #111827;
+  animation: lcb-spin 0.9s linear infinite;
+}
+
+.lcb-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #ef4444;
+}
+
+.lcb-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #f9fafb;
+}
+
+.lcb-middle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 5px;
+  background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.lcb-button {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f9fafb;
+  border: 3px solid #111827;
+}
+
+@keyframes lcb-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-conv-title {
+  color: #f9fafb;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.loading-conv-sub {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
