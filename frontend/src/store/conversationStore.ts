@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../services/api';
-import { Conversation, ConversationListResponse, ConversationCreateRequest } from '../types/conversation';
+import { Conversation, ConversationListResponse } from '../types/conversation';
 
 interface ConversationState {
   conversations: Conversation[];
