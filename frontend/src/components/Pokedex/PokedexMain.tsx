@@ -5,36 +5,34 @@ import { useConversationStore } from '../../store/conversationStore';
 import { useAuthStore } from '../../store/authStore';
 import { ConversationsSidebar } from '../Conversations';
 import { Conversation } from '../../types/conversation';
-import { Pokemon } from '../../types/pokemon';
-import PokemonCard from '../Pokemon/PokemonCard';
+import MessageBubble from '../Chat/MessageBubble';
+import PokeballLoading from '../Chat/PokeballLoading';
+import LoadingConversationModal from '../Modal/LoadingConversationModal';
 import SearchModal from '../Modal/SearchModal';
 import ComparisonModal from '../Modal/ComparisonModal';
 import TeamModal from '../Modal/TeamModal';
 import { LogoutModal } from '../Modal/LogoutModal';
 import { TeamFilters } from '../Tabs/TeamTab';
 import { api } from '../../services/axiosConfig';
+import { Pokemon } from '../../types/pokemon';
 import './PokedexMain.css';
+
+type LoadingStatus = 'loading' | 'success' | 'error';
 
 export const PokedexMain: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-
-  // ─── Lista de Pokémon para o autocomplete dos modais ───────────
+  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus | null>(null);
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [isConversationLoading, setIsConversationLoading] = useState(false);
 
-  // Controle de modais - apenas 1 aberto por vez
   const [activeModal, setActiveModal] = useState<'search' | 'comparison' | 'team' | 'logout' | null>(null);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Store de chat
-  const { messages, sendMessage, loadHistory } = useChatStore();
-
-  // Store de auth
+  const { messages, sendMessage, loadHistory, clearMessages } = useChatStore();
   const logout = useAuthStore((state) => state.logout);
 
-  // Store de conversas
   const {
     conversations,
     activeConversationId,
@@ -47,27 +45,26 @@ export const PokedexMain: React.FC = () => {
     updateConversationMessageCount,
   } = useConversationStore();
 
-  // ─── Carregar conversas e lista de Pokémon ao montar ───────────
   useEffect(() => {
     fetchConversations();
-    fetchPokemonList(); // ← adicionado aqui
+    fetchPokemonList();
   }, [fetchConversations]);
 
-  // Carregar histórico quando conversa ativa mudar
   useEffect(() => {
     if (activeConversationId) {
-      loadHistory(activeConversationId);
+      setIsConversationLoading(true);
+      loadHistory(activeConversationId).finally(() => {
+        setIsConversationLoading(false);
+      });
     }
   }, [activeConversationId, loadHistory]);
 
-  // Auto-scroll ao adicionar mensagens
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, loadingStatus]);
 
-  // ─── Busca a lista de Pokémon da API para o autocomplete ───────
   const fetchPokemonList = async () => {
     try {
       const response = await api.get('/api/chat/pokemon-list');
@@ -78,97 +75,106 @@ export const PokedexMain: React.FC = () => {
     }
   };
 
-  // ─── Enviar mensagem via input ──────────────────────────────────
+  const isBlocked = loadingStatus === 'loading' || isConversationLoading;
+
+  // Modal de aviso só aparece quando usuário TENTA fazer algo bloqueado
+  const [showBlockedWarning, setShowBlockedWarning] = useState(false);
+  const showBlockedModal = () => {
+    if (!isBlocked) return;
+    setShowBlockedWarning(true);
+    setTimeout(() => setShowBlockedWarning(false), 2000);
+  };
+
   const handleSendMessage = async () => {
-    if (inputMessage.trim() === '') return;
+    if (inputMessage.trim() === '' || isBlocked) return;
 
     const messageToSend = inputMessage;
     setInputMessage('');
-    setIsTyping(true);
+    setLoadingStatus('loading');
 
     try {
       await sendMessage(messageToSend, activeConversationId || undefined);
-
-      if (activeConversationId) {
-        updateConversationMessageCount(activeConversationId);
-      }
+      if (activeConversationId) updateConversationMessageCount(activeConversationId);
+      setLoadingStatus('success');
+      setTimeout(() => setLoadingStatus(null), 1200);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-    } finally {
-      setIsTyping(false);
+      setLoadingStatus('error');
+      setTimeout(() => setLoadingStatus(null), 2000);
     }
   };
 
-  // ─── Enviar mensagem via modais (buscar, comparar, equipe) ─────
   const sendMessageDirectly = async (message: string) => {
-    if (!message.trim()) return;
+    if (!message.trim() || isBlocked) return;
 
-    setIsTyping(true);
-
+    setLoadingStatus('loading');
     try {
       await sendMessage(message, activeConversationId || undefined);
-
-      if (activeConversationId) {
-        updateConversationMessageCount(activeConversationId);
-      }
+      if (activeConversationId) updateConversationMessageCount(activeConversationId);
+      setLoadingStatus('success');
+      setTimeout(() => setLoadingStatus(null), 1200);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-    } finally {
-      setIsTyping(false);
+      setLoadingStatus('error');
+      setTimeout(() => setLoadingStatus(null), 2000);
     }
   };
 
-  // ─── Handlers de conversas ─────────────────────────────────────
   const handleNewConversation = async (): Promise<Conversation | null> => {
-    const timestamp = new Date().toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    if (isBlocked) { showBlockedModal(); return null; }
+    const timestamp = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    clearMessages();
     return await createConversation(`Nova Conversa ${timestamp}`);
   };
 
   const handleSelectConversation = (id: number) => {
+    if (isBlocked) { showBlockedModal(); return; }
     setActiveConversation(id);
   };
 
   const handleRenameConversation = async (id: number, newTitle: string) => {
+    if (isBlocked) { showBlockedModal(); return; }
     await renameConversation(id, newTitle);
   };
 
   const handleDeleteConversation = async (id: number) => {
+    if (isBlocked) { showBlockedModal(); return; }
+    const isDeletingActive = id === activeConversationId;
     await deleteConversation(id);
+    if (isDeletingActive) {
+      clearMessages();
+      const remaining = useConversationStore.getState().conversations;
+      if (remaining.length === 0) {
+        await createConversation('Nova Conversa');
+      }
+    }
   };
 
-  // ─── Controle de modais ────────────────────────────────────────
-  const openSearchModal = () => setActiveModal('search');
-  const openComparisonModal = () => setActiveModal('comparison');
-  const openTeamModal = () => setActiveModal('team');
-  const openLogoutModal = () => setActiveModal('logout');
+  const openModal = (modal: 'search' | 'comparison' | 'team' | 'logout') => {
+    if (isBlocked) { showBlockedModal(); return; }
+    setActiveModal(modal);
+  };
+
   const closeModal = () => setActiveModal(null);
 
-  // ─── Handlers dos modais ───────────────────────────────────────
   const handleSearch = (pokemonName: string) => {
-    const message = `Me fale sobre ${pokemonName}`;
     closeModal();
-    sendMessageDirectly(message);
+    sendMessageDirectly(`Me fale sobre ${pokemonName}`);
   };
 
   const handleCompare = (pokemon1: string, pokemon2: string) => {
-    const message = `Compare ${pokemon1} e ${pokemon2}`;
     closeModal();
-    sendMessageDirectly(message);
+    sendMessageDirectly(`Compare ${pokemon1} e ${pokemon2}`);
   };
 
   const handleGenerateTeam = (filters: TeamFilters) => {
     let message = 'Monte uma equipe';
     if (filters.type) message += ` de ${filters.type}`;
     if (filters.strategy) message += ` ${filters.strategy}`;
-
     closeModal();
     sendMessageDirectly(message);
   };
 
-  // ─── Handler de logout ─────────────────────────────────────────
   const handleLogoutConfirm = () => {
     logout();
     navigate('/login');
@@ -177,8 +183,13 @@ export const PokedexMain: React.FC = () => {
 
   return (
     <div className="pokedex-main-container">
+      {/* Modal de aviso — aparece apenas ao tentar clicar em algo bloqueado */}
+      <LoadingConversationModal
+        isOpen={showBlockedWarning}
+        reason={isConversationLoading ? 'conversation' : 'message'}
+      />
 
-      {/* SIDEBAR DE CONVERSAS */}
+      {/* SIDEBAR */}
       <ConversationsSidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
@@ -191,42 +202,22 @@ export const PokedexMain: React.FC = () => {
 
       {/* CONTEÚDO PRINCIPAL */}
       <div className="pokedex-main-content">
-
-        {/* Header com botões */}
+        {/* Header */}
         <div className="pokedex-header">
           <h1>PokéIA - Assistente Pokémon</h1>
           <div className="header-actions">
             <div className="header-buttons">
-              <button
-                className="header-btn"
-                onClick={openSearchModal}
-                title="Buscar Pokémon"
-                disabled={isTyping}
-              >
+              <button className="header-btn" onClick={() => openModal('search')} disabled={isBlocked}>
                 🔍 Buscar
               </button>
-              <button
-                className="header-btn"
-                onClick={openComparisonModal}
-                title="Comparar Pokémon"
-                disabled={isTyping}
-              >
+              <button className="header-btn" onClick={() => openModal('comparison')} disabled={isBlocked}>
                 ⚔️ Comparar
               </button>
-              <button
-                className="header-btn"
-                onClick={openTeamModal}
-                title="Montar Equipe"
-                disabled={isTyping}
-              >
+              <button className="header-btn" onClick={() => openModal('team')} disabled={isBlocked}>
                 🎯 Equipe
               </button>
             </div>
-            <button
-              className="logout-btn"
-              onClick={openLogoutModal}
-              title="Sair"
-            >
+            <button className="logout-btn" onClick={() => openModal('logout')}>
               🚪 Sair
             </button>
           </div>
@@ -235,7 +226,7 @@ export const PokedexMain: React.FC = () => {
         {/* Área de Chat */}
         <div className="chat-area">
           <div className="messages-container" ref={messagesContainerRef}>
-            {messages.length === 0 ? (
+            {messages.length === 0 && !loadingStatus ? (
               <div className="welcome-message">
                 <h2>👋 Bem-vindo ao PokéIA!</h2>
                 <p>Pergunte sobre qualquer Pokémon ou use os botões acima para:</p>
@@ -246,31 +237,28 @@ export const PokedexMain: React.FC = () => {
                 </ul>
               </div>
             ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`message ${msg.is_bot ? 'bot-message' : 'user-message'}`}
-                >
-                  <div className="message-content">{msg.content}</div>
-                  {msg.pokemon_data && (
-                    <PokemonCard pokemon={msg.pokemon_data} />
-                  )}
-                </div>
+              messages.map((msg, index) => (
+                <MessageBubble
+                  key={`${msg.id ?? index}-${index}`}
+                  message={msg}
+                />
               ))
             )}
 
-            {isTyping && (
-              <div className="message bot-message">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+            {/* Pokébola de loading */}
+            {loadingStatus && (
+              <div className="message-bubble bot" style={{ marginTop: '0.5rem' }}>
+                <div className="message-avatar">🤖</div>
+                <div className="message-content-wrapper">
+                  <PokeballLoading status={loadingStatus} />
                 </div>
               </div>
             )}
+
+            <div ref={messagesContainerRef} />
           </div>
 
-          {/* Input de mensagem */}
+          {/* Input */}
           <div className="input-area">
             <input
               type="text"
@@ -278,45 +266,39 @@ export const PokedexMain: React.FC = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Pergunte sobre um Pokémon..."
-              disabled={isTyping}
+              disabled={isBlocked}
             />
-            <button onClick={handleSendMessage} disabled={isTyping}>
-              Enviar
+            <button onClick={handleSendMessage} disabled={isBlocked}>
+              {loadingStatus === 'loading' ? '...' : 'Enviar'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ─── MODAIS ──────────────────────────────────────────────── */}
-
-      {/* Buscar Pokémon — recebe pokemonList para o PokemonAutocomplete */}
+      {/* Modais */}
       <SearchModal
         isOpen={activeModal === 'search'}
         onClose={closeModal}
         pokemonList={pokemonList}
         onSearch={handleSearch}
       />
-
-      {/* Comparar Pokémon — recebe pokemonList para o PokemonAutocomplete */}
       <ComparisonModal
         isOpen={activeModal === 'comparison'}
         onClose={closeModal}
         pokemonList={pokemonList}
         onCompare={handleCompare}
       />
-
       <TeamModal
         isOpen={activeModal === 'team'}
         onClose={closeModal}
         onGenerateTeam={handleGenerateTeam}
+        disabled={isBlocked}
       />
-
       <LogoutModal
         isOpen={activeModal === 'logout'}
         onClose={closeModal}
         onConfirm={handleLogoutConfirm}
       />
-
     </div>
   );
 };

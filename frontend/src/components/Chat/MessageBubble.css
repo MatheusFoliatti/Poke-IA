@@ -1,5 +1,6 @@
 .message-bubble {
   display: flex;
+  align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
   animation: slideUp 0.3s ease-out;

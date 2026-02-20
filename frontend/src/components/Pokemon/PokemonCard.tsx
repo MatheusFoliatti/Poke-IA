@@ -25,7 +25,7 @@ export default function PokemonCard({ pokemon }: PokemonCardProps) {
     console.error('🎴 [CARD] Pokemon é null/undefined');
     return null;
   }
-
+  console.log('🎴 [CARD] Pokemon completo:', JSON.stringify(pokemon, null, 2));
   if (!pokemon.stats) {
     console.error('🎴 [CARD] Pokemon.stats é null/undefined:', pokemon);
     return (
