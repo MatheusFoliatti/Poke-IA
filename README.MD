@@ -57,6 +57,7 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 - **Interface com sistema de abas** (Buscar, Comparar, Montar Equipe)
 - **Autocomplete com sprites** em todos os modais em tempo real _(v2.2.0)_
 - **Modais padronizados** com visual unificado _(v2.2.0)_
+- **Pokébola animada** como indicador de loading com estados de sucesso/erro _(v2.3.0)_
 - **Design responsivo** otimizado para mobile e desktop
 
 ---
@@ -90,6 +91,17 @@ A **Pokédex AI** é uma aplicação web full-stack moderna que revoluciona a ex
 - ✅ **Dropdown do autocomplete** com z-index correto dentro de modais
 - ✅ **Visual dos modais padronizado** — Buscar e Comparar agora têm o mesmo estilo do Montar Equipe
 - ✅ **Endpoint `/api/chat/pokemon-list`** corrigido para retornar `{ name, sprite }[]`
+
+### ⚡ Melhorias de UX _(novo em v2.3.0)_
+
+- ✅ **Título automático** gerado após a primeira mensagem de cada conversa
+- ✅ **Mensagem do usuário aparece imediatamente** (optimistic update antes da resposta da IA)
+- ✅ **Modal de bloqueio** ao tentar ações durante carregamento (busca, comparação, troca de conversa)
+- ✅ **Pokébola animada** como indicador de loading — botão central fica verde (sucesso) ou vermelho (erro)
+- ✅ **Fix: deletar conversa inativa** não limpa mais o chat ativo
+- ✅ **Fix: X dos modais** posicionado corretamente dentro do header
+- ✅ **Fix: avatar do bot** alinhado verticalmente com a mensagem
+- ✅ **Fix: CORS 500** por `@property` no conversation_service
 
 ### 🔍 Busca Inteligente de Pokémon
 
@@ -246,6 +258,26 @@ Check: already has empty conversation?
            setActiveConversation(id)
                 ↓
            Load messages for this conversation
+```
+
+#### Título Automático de Conversa _(v2.3.0)_
+
+```
+User sends first message
+    ↓
+Chat endpoint detects: is first message in conversation?
+    ↓
+Analyze content:
+    ├── Comparison     → "Comparação: PokémonA vs PokémonB"
+    ├── Team           → "Equipe Fire Ofensiva"
+    ├── Single Pokémon → "Sobre Pikachu"
+    └── Generic        → first 40 chars of message
+    ↓
+Return conversation_title in response
+    ↓
+chatStore → updateConversationTitle(id, title)
+    ↓
+Sidebar updates automatically
 ```
 
 #### JWT Refresh Automático
@@ -423,8 +455,8 @@ Poke-IA/
 │   ├── app/
 │   │   ├── api/endpoints/
 │   │   │   ├── auth.py
-│   │   │   ├── chat.py
-│   │   │   └── conversations.py       ← novo v2.1.0
+│   │   │   ├── chat.py                          ← atualizado v2.3.0
+│   │   │   └── conversations.py
 │   │   ├── core/
 │   │   │   ├── config.py
 │   │   │   ├── security.py
@@ -433,25 +465,32 @@ Poke-IA/
 │   │   │   ├── models.py
 │   │   │   └── database.py
 │   │   ├── schemas/
-│   │   │   └── conversation.py        ← novo v2.1.0
+│   │   │   └── conversation.py
 │   │   ├── services/
 │   │   │   ├── pokeapi.py
 │   │   │   ├── chat_service.py
-│   │   │   └── conversation_service.py ← novo v2.1.0
+│   │   │   └── conversation_service.py          ← atualizado v2.3.0
 │   │   └── main.py
 │   ├── alembic/
 │   │   └── versions/
 │   │       ├── 0eecc261f479_baseline.py
-│   │       └── 5c40fd2edc57_add_conversations_table.py ← novo v2.1.0
+│   │       └── 5c40fd2edc57_add_conversations_table.py
 │   ├── requirements.txt
 │   └── .env
 ├── frontend/
 │   ├── src/
+│   │   ├── assets/
+│   │   │   └── pokeball_sprite.png              ← novo v2.3.0
 │   │   ├── components/
 │   │   │   ├── Auth/
 │   │   │   ├── Pokedex/
+│   │   │   │   └── PokedexMain.tsx              ← atualizado v2.3.0
 │   │   │   ├── Chat/
-│   │   │   ├── Conversations/         ← novo v2.1.0
+│   │   │   │   ├── MessageBubble.tsx
+│   │   │   │   ├── MessageBubble.css            ← atualizado v2.3.0
+│   │   │   │   ├── PokeballLoading.tsx          ← novo v2.3.0
+│   │   │   │   └── PokeballLoading.css          ← novo v2.3.0
+│   │   │   ├── Conversations/
 │   │   │   │   ├── ConversationsSidebar.tsx
 │   │   │   │   ├── ConversationItem.tsx
 │   │   │   │   ├── RenameConversationModal.tsx
@@ -461,13 +500,16 @@ Poke-IA/
 │   │   │   ├── Tabs/
 │   │   │   ├── Autocomplete/
 │   │   │   └── Modal/
+│   │   │       ├── SearchModal.css              ← atualizado v2.3.0
+│   │   │       ├── LoadingConversationModal.tsx ← novo v2.3.0
+│   │   │       └── LoadingConversationModal.css ← novo v2.3.0
 │   │   ├── services/
 │   │   ├── store/
 │   │   │   ├── authStore.ts
-│   │   │   ├── chatStore.ts
-│   │   │   └── conversationStore.ts   ← novo v2.1.0
+│   │   │   ├── chatStore.ts                     ← atualizado v2.3.0
+│   │   │   └── conversationStore.ts             ← atualizado v2.3.0
 │   │   ├── types/
-│   │   │   └── conversation.ts        ← novo v2.1.0
+│   │   │   └── conversation.ts
 │   │   └── App.tsx
 │   ├── package.json
 │   └── .env
@@ -490,12 +532,12 @@ Poke-IA/
 
 ### Chat e Pokémon
 
-| Método | Endpoint               | Auth    | Descrição               |
-| ------ | ---------------------- | ------- | ----------------------- |
-| POST   | /api/chat/message      | Privado | Enviar mensagem         |
-| GET    | /api/chat/history      | Privado | Obter histórico         |
-| DELETE | /api/chat/history      | Privado | Limpar histórico        |
-| GET    | /api/chat/pokemon-list | Público | Lista para autocomplete |
+| Método | Endpoint               | Auth    | Descrição                                             |
+| ------ | ---------------------- | ------- | ----------------------------------------------------- |
+| POST   | /api/chat/message      | Privado | Enviar mensagem (retorna `conversation_title` v2.3.0) |
+| GET    | /api/chat/history      | Privado | Obter histórico                                       |
+| DELETE | /api/chat/history      | Privado | Limpar histórico                                      |
+| GET    | /api/chat/pokemon-list | Público | Lista para autocomplete                               |
 
 ### Conversas _(novo v2.1.0)_
 
@@ -567,12 +609,23 @@ Poke-IA/
 - [x] Visual dos modais padronizado (Buscar, Comparar, Equipe)
 - [x] Endpoint `/api/chat/pokemon-list` corrigido para retornar `{ name, sprite }[]`
 
-### 🚧 v2.3 - Próxima
+### ✅ v2.3 - Concluído
 
+- [x] Título automático gerado após a primeira mensagem
+- [x] Mensagem do usuário aparece imediatamente (optimistic update)
+- [x] Modal de bloqueio ao tentar ações durante carregamento
+- [x] Pokébola animada com sucesso (verde) e erro (vermelho)
+- [x] Fix: deletar conversa inativa não afeta o chat ativo
+- [x] Fix: X dos modais posicionado dentro do header
+- [x] Fix: avatar do bot alinhado verticalmente com a mensagem
+- [x] Fix: CORS 500 por `@property` no conversation_service
+
+### 🚧 v2.4 - Próxima
+
+- [ ] Tela inicial com sugestões clicáveis
+- [ ] Toast global unificado
 - [ ] Testes unitários (frontend e backend)
 - [ ] CI/CD com GitHub Actions
-- [ ] Toast global unificado
-- [ ] PWA offline-first
 
 ### 🎯 v3.0 - Futuro
 
